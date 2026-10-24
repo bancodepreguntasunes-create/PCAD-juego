@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+        <meta name="theme-color" content="#071325">
+    <meta name="description" content="Simulador táctico PCAD - UNES: Guías III y IV, triaje estructural y despacho EDAN.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
+    <title>PCAD Operaciones - Cómic & Simulador Táctico UNES</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Montserrat:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul-pcad: #071325;
+            --azul-superficie: #0d1f38;
+            --azul-tarjeta: #132a4d;
+            --azul-borde: #1e3f6f;
+            --naranja-pcad: #FF6B00;
+            --naranja-hover: #FF8533;
+            --naranja-brillo: rgba(255, 107, 0, 0.35);
+            --blanco: #F0F6FC;
+            --texto-suave: #9BB0C7;
+            --verde: #00E676;
+            --verde-suave: rgba(0, 230, 118, 0.15);
+            --rojo: #FF2E55;
+            --rojo-suave: rgba(255, 46, 85, 0.15);
+            --amarillo: #FFD600;
+            --comic-font: 'Bangers', cursive, sans-serif;
+            --fuente-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--azul-pcad);
+            color: var(--blanco);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(255, 107, 0, 0.1) 0%, transparent 60%),
+                radial-gradient(circle at 10% 90%, rgba(13, 31, 56, 0.8) 0%, transparent 50%),
+                linear-gradient(180deg, #050d1a 0%, #071325 100%);
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 1080px;
+            min-height: 92vh;
+            max-height: 96vh;
+            background: rgba(13, 31, 56, 0.92);
+            backdrop-filter: blur(14px);
+            border: 3px solid #000;
+            box-shadow: 8px 8px 0px var(--naranja-pcad), 14px 14px 0px rgba(0,0,0,0.6);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* HEADER TÁCTICO TIPO CÓMIC */
+        header {
+            background: linear-gradient(90deg, #09172c 0%, #0f2444 50%, #09172c 100%);
+            padding: 12px 24px;
+            border-bottom: 4px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+        }
+
+        .badge-pcad {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            filter: drop-shadow(3px 3px 0px #000);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .logo-area:hover .badge-pcad {
+            transform: scale(1.1) rotate(6deg);
+        }
+
+        .header-titulos h1 {
+            font-family: var(--comic-font);
+            font-size: 1.6rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            line-height: 1;
+            color: #fff;
+            text-shadow: 2px 2px 0px #000, 3px 3px 0px var(--naranja-pcad);
+        }
+        .header-titulos h1 span {
+            color: var(--amarillo);
+        }
+        .header-sub {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--texto-suave);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--verde);
+            border: 1px solid #000;
+            box-shadow: 0 0 10px var(--verde);
+            display: inline-block;
+            animation: pulseDot 1.8s infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            background: var(--azul-tarjeta);
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            color: var(--blanco);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.15rem;
+            transition: all 0.2s;
+        }
+        .btn-icon:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--naranja-pcad);
+            color: var(--naranja-pcad);
+            border-color: #000;
+        }
+        .btn-icon:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            display: none;
+            flex: 1;
+            padding: 24px 28px;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: comicEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .screen.active {
+            display: flex;
+        }
+        @keyframes comicEnter {
+            from { opacity: 0; transform: scale(0.97) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* MENÚ PRINCIPAL */
+        .banner-intro {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.16) 0%, rgba(13, 31, 56, 0.8) 100%);
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            position: relative;
+        }
+        .banner-intro h2 {
+            font-family: var(--comic-font);
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 2px 2px 0px #000;
+        }
+        .banner-intro p {
+            color: var(--texto-suave);
+            font-size: 0.85rem;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+        .stats-badge-group {
+            display: flex;
+            gap: 10px;
+        }
+        .stat-pill {
+            background: #09172c;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px var(--naranja-pcad);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stat-pill span {
+            color: var(--amarillo);
+            font-family: var(--fuente-mono);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+            flex: 1;
+        }
+
+        .menu-card {
+            background: var(--azul-tarjeta);
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            border-radius: 16px;
+            padding: 22px 20px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-card:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px var(--naranja-pcad);
+            background: #17355e;
+        }
+        .menu-card:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+        .menu-icon-wrap {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: var(--naranja-pcad);
+            border: 3px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 14px;
+            transition: transform 0.25s;
+        }
+        .menu-card:hover .menu-icon-wrap {
+            transform: rotate(-6deg) scale(1.1);
+            background: var(--amarillo);
+        }
+        .menu-tag {
+            font-family: var(--comic-font);
+            font-size: 0.95rem;
+            letter-spacing: 0.8px;
+            color: var(--naranja-pcad);
+            margin-bottom: 2px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .menu-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--blanco);
+            margin-bottom: 8px;
+        }
+        .menu-desc {
+            font-size: 0.82rem;
+            color: var(--texto-suave);
+            line-height: 1.45;
+            margin-bottom: 16px;
+            flex: 1;
+        }
+        .menu-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--blanco);
+            font-weight: 800;
+            border-top: 2px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 10px;
+        }
+        .menu-footer span.arrow {
+            color: var(--amarillo);
+            font-size: 1.2rem;
+            font-family: var(--comic-font);
+            transition: transform 0.2s;
+        }
+        .menu-card:hover .menu-footer span.arrow {
+            transform: translateX(6px) scale(1.2);
+        }
+
+        /* HUD GENERAL */
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .hud-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .hud-item {
+            background: var(--azul-tarjeta);
+            padding: 8px 14px;
+            border-radius: 12px;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hud-item span {
+            color: var(--amarillo);
+            font-family: var(--fuente-mono);
+            font-weight: 800;
+        }
+        .racha-badge {
+            background: linear-gradient(135deg, #FF6B00, #E53935);
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--comic-font);
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 0px #000;
+            animation: pulseRacha 1.5s infinite;
+        }
+        @keyframes pulseRacha {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+
+        /* TIMER BAR ESTILO CÓMIC */
+        .timer-container {
+            width: 100%;
+            height: 10px;
+            background: #000;
+            border: 2px solid #000;
+            border-radius: 6px;
+            margin-bottom: 18px;
+            overflow: hidden;
+            display: none;
+            box-shadow: 2px 2px 0px var(--naranja-pcad);
+        }
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--verde);
+            transition: width 0.1s linear, background-color 0.3s;
+        }
+
+        /* PREGUNTA CONTAINER */
+        .pregunta-container {
+            background: var(--azul-tarjeta);
+            padding: 22px 24px;
+            border-radius: 16px;
+            border: 3px solid #000;
+            border-left: 8px solid var(--naranja-pcad);
+            box-shadow: 5px 5px 0px #000;
+            margin-bottom: 18px;
+        }
+        .pregunta-categoria {
+            display: inline-block;
+            font-family: var(--comic-font);
+            font-size: 1rem;
+            color: var(--amarillo);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .pregunta-texto {
+            font-size: 1.12rem;
+            font-weight: 700;
+            line-height: 1.45;
+            color: var(--blanco);
+        }
+
+        /* OPCIONES */
+        .opciones-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .opcion {
+            background: var(--azul-superficie);
+            border: 3px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            color: var(--blanco);
+            padding: 14px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-align: left;
+        }
+        .opcion:hover:not(.bloqueada) {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px var(--naranja-pcad);
+            background: #142c4f;
+        }
+        .opcion .letra {
+            background: var(--azul-tarjeta);
+            min-width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 8px;
+            font-family: var(--comic-font);
+            font-size: 1.3rem;
+            color: var(--amarillo);
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .opcion.correcta {
+            background: var(--verde-suave);
+            border-color: #000;
+            box-shadow: 4px 4px 0px var(--verde);
+            color: #fff;
+            transform: scale(1.01);
+        }
+        .opcion.correcta .letra {
+            background: var(--verde);
+            color: #000;
+        }
+        .opcion.incorrecta {
+            background: var(--rojo-suave);
+            border-color: #000;
+            box-shadow: 4px 4px 0px var(--rojo);
+            color: var(--texto-suave);
+            opacity: 0.85;
+        }
+        .opcion.incorrecta .letra {
+            background: var(--rojo);
+            color: #fff;
+        }
+        .opcion.bloqueada {
+            cursor: default;
+        }
+
+        /* FEEDBACK BOX CÓMIC */
+        .feedback-box {
+            padding: 16px 20px;
+            border-radius: 14px;
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            display: none;
+            animation: comicEnter 0.25s;
+            margin-bottom: 18px;
+            font-size: 0.94rem;
+            line-height: 1.45;
+        }
+        .feedback-box.show {
+            display: block;
+        }
+        .feedback-box.ok {
+            background: rgba(0, 230, 118, 0.2);
+            border-color: #000;
+            color: #d1fae5;
+        }
+        .feedback-box.fail {
+            background: rgba(255, 46, 85, 0.22);
+            border-color: #000;
+            color: #ffe4e6;
+        }
+        .feedback-box .justificacion {
+            margin-top: 8px;
+            font-size: 0.86rem;
+            opacity: 0.92;
+            line-height: 1.4;
+        }
+
+        /* BOTONES DE ACCIÓN */
+        .action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 10px;
+        }
+        .btn-secondary {
+            background: var(--azul-superficie);
+            color: var(--blanco);
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            padding: 12px 20px;
+            font-size: 0.86rem;
+            font-weight: 800;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-secondary:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px var(--texto-suave);
+        }
+        .btn-secondary:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px #000;
+        }
+
+        .btn-primary {
+            background: var(--naranja-pcad);
+            color: #000;
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            padding: 12px 28px;
+            font-family: var(--comic-font);
+            font-size: 1.25rem;
+            letter-spacing: 1.2px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--amarillo);
+            transform: translate(-3px, -3px);
+            box-shadow: 7px 7px 0px #000;
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+        }
+        .btn-primary:disabled {
+            background: #2b3b52;
+            color: #64748b;
+            cursor: not-allowed;
+            box-shadow: 2px 2px 0px #000;
+            transform: none;
+        }
+
+        /* =======================================================
+           PANEL DE CÓMIC: MINIJUEGO ESTRUCTURAS
+           ======================================================= */
+        .comic-panel-container {
+            background: #0b1a30;
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px #000;
+            border-radius: 18px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 18px;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(#1e3b66 10%, transparent 11%),
+                radial-gradient(#1e3b66 10%, transparent 11%);
+            background-size: 18px 18px;
+            background-position: 0 0, 9px 9px;
+        }
+
+        .comic-vignette-tag {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            background: var(--amarillo);
+            color: #000;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            padding: 3px 10px;
+            font-family: var(--comic-font);
+            font-size: 0.95rem;
+            letter-spacing: 0.8px;
+            transform: rotate(-2deg);
+            z-index: 5;
+        }
+
+        .svg-canvas-wrap {
+            width: 100%;
+            max-width: 480px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 14px;
+            filter: drop-shadow(4px 4px 0px #000);
+        }
+        .svg-canvas-wrap svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .est-titulo-wrap {
+            text-align: center;
+            max-width: 680px;
+            background: rgba(9, 23, 44, 0.95);
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0px #000;
+            border-radius: 12px;
+            padding: 12px 18px;
+            width: 100%;
+        }
+        .est-titulo {
+            font-family: var(--comic-font);
+            color: var(--amarillo);
+            font-size: 1.45rem;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .est-desc {
+            color: var(--blanco);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .botones-decision {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 14px;
+        }
+        .btn-decision {
+            padding: 14px 34px;
+            font-family: var(--comic-font);
+            font-size: 1.35rem;
+            letter-spacing: 1.2px;
+            border: 3px solid #000;
+            box-shadow: 5px 5px 0px #000;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 280px;
+            justify-content: center;
+        }
+        .btn-seguro {
+            background: var(--verde);
+            color: #000;
+        }
+        .btn-seguro:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #000;
+            background: #2aff9b;
+        }
+        .btn-seguro:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+        .btn-peligro {
+            background: var(--rojo);
+            color: #fff;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .btn-peligro:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #000;
+            background: #ff476d;
+        }
+        .btn-peligro:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* PANTALLA SALA SITUACIONAL (DESPACHO EDAN) */
+        .despacho-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .despacho-card {
+            background: var(--azul-superficie);
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            border-radius: 14px;
+            padding: 16px;
+        }
+        .despacho-card h4 {
+            font-family: var(--comic-font);
+            color: var(--amarillo);
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .radio-transcript {
+            background: #050d1a;
+            border: 2px solid #193154;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: var(--fuente-mono);
+            font-size: 0.85rem;
+            color: #4ade80;
+            line-height: 1.5;
+            position: relative;
+        }
+        .radio-transcript::before {
+            content: "🔴 RX FREC: 156.800 MHz (VHF Ch 16)";
+            display: block;
+            color: var(--texto-suave);
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        /* PANTALLA RESULTADOS FINAL CÓMIC */
+        .resultado-box {
+            background: var(--azul-tarjeta);
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px #000;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 650px;
+            margin: auto;
+        }
+        .rango-emblema {
+            width: 95px;
+            height: 95px;
+            margin: 0 auto 14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--amarillo), var(--naranja-pcad));
+            border: 3px solid #000;
+            box-shadow: 4px 4px 0px #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            transform: rotate(-4deg);
+        }
+        .nota-grande {
+            font-family: var(--comic-font);
+            font-size: 4.2rem;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 6px;
+            text-shadow: 3px 3px 0px #000, 5px 5px 0px var(--naranja-pcad);
+        }
+        .nota-grande span {
+            font-size: 2rem;
+            color: var(--amarillo);
+        }
+        .calificacion-unes {
+            font-family: var(--comic-font);
+            font-size: 1.6rem;
+            letter-spacing: 1.5px;
+            color: var(--amarillo);
+            text-shadow: 2px 2px 0px #000;
+            margin-bottom: 16px;
+        }
+        .resultado-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+            background: #09172c;
+            padding: 16px;
+            border-radius: 14px;
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0px #000;
+        }
+        .res-stat-val {
+            font-family: var(--comic-font);
+            font-size: 2rem;
+            color: var(--amarillo);
+            text-shadow: 1px 1px 0px #000;
+        }
+        .res-stat-lbl {
+            font-size: 0.72rem;
+            color: var(--texto-suave);
+            text-transform: uppercase;
+            font-weight: 800;
+            margin-top: 2px;
+        }
+
+        /* MODAL MANUAL */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 11, 22, 0.88);
+            backdrop-filter: blur(8px);
+            z-index: 150;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--azul-tarjeta);
+            border: 4px solid #000;
+            border-radius: 18px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 10px 10px 0px var(--naranja-pcad);
+        }
+        .modal-header {
+            background: #09172c;
+            padding: 16px 22px;
+            border-bottom: 3px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            font-family: var(--comic-font);
+            color: var(--amarillo);
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        .modal-close {
+            background: var(--rojo);
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .modal-body {
+            padding: 22px;
+            overflow-y: auto;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            color: var(--blanco);
+        }
+        .manual-section {
+            margin-bottom: 18px;
+            background: var(--azul-superficie);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid #000;
+            border-left: 6px solid var(--naranja-pcad);
+            box-shadow: 3px 3px 0px #000;
+        }
+        .manual-section h4 {
+            font-family: var(--comic-font);
+            color: var(--amarillo);
+            font-size: 1.15rem;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+            text-shadow: 1px 1px 0px #000;
+        }
+
+        /* CHATBOT TÁCTICO FLOTANTE */
+        #chat-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            height: 520px;
+            max-width: calc(100vw - 40px);
+            max-height: calc(100vh - 80px);
+            background: var(--azul-pcad);
+            border: 3px solid #000;
+            border-radius: 18px;
+            display: none;
+            flex-direction: column;
+            z-index: 120;
+            box-shadow: 8px 8px 0px #000;
+            animation: comicEnter 0.25s;
+            overflow: hidden;
+        }
+        #chat-header {
+            background: #09172c;
+            color: var(--blanco);
+            padding: 14px 18px;
+            border-bottom: 3px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #chat-header span.comic-title {
+            font-family: var(--comic-font);
+            font-size: 1.35rem;
+            color: var(--amarillo);
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 0px #000;
+        }
+        #chat-chips {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #050d1a;
+            overflow-x: auto;
+            border-bottom: 2px solid #000;
+            white-space: nowrap;
+        }
+        .chip {
+            background: var(--azul-tarjeta);
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+            color: var(--blanco);
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .chip:hover {
+            background: var(--amarillo);
+            color: #000;
+            transform: translate(-1px, -1px);
+        }
+        #chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            font-size: 0.86rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .msg {
+            padding: 10px 14px;
+            border-radius: 12px;
+            max-width: 86%;
+            line-height: 1.4;
+            word-wrap: break-word;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+        }
+        .msg-bot {
+            background: var(--azul-tarjeta);
+            color: var(--blanco);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .msg-user {
+            background: var(--amarillo);
+            color: #000;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+            font-weight: 700;
+        }
+        #chat-input-area {
+            display: flex;
+            padding: 10px;
+            background: #09172c;
+            border-top: 3px solid #000;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #000;
+            border-radius: 8px 0 0 8px;
+            outline: none;
+            background: var(--azul-superficie);
+            color: var(--blanco);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.85rem;
+        }
+        #chat-send {
+            background: var(--naranja-pcad);
+            border: 2px solid #000;
+            border-left: none;
+            color: #000;
+            padding: 0 16px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        #chat-send:hover {
+            background: var(--amarillo);
+        }
+
+        /* BOTÓN FLOTANTE CHAT */
+        #btn-chat {
+            position: absolute;
+            bottom: 22px;
+            right: 22px;
+            background: var(--amarillo);
+            color: #000;
+            border: 3px solid #000;
+            box-shadow: 5px 5px 0px #000;
+            padding: 12px 22px;
+            border-radius: 50px;
+            font-family: var(--comic-font);
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 99;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #btn-chat:hover {
+            transform: translate(-3px, -3px) scale(1.05);
+            box-shadow: 8px 8px 0px var(--naranja-pcad);
+            background: #fff;
+        }
+        #btn-chat:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            #app {
+                min-height: 98vh;
+                max-height: none;
+                border-radius: 12px;
+            }
+            .screen {
+                padding: 16px 14px;
+            }
+            header {
+                padding: 10px 14px;
+            }
+            .header-titulos h1 {
+                font-size: 1.25rem;
+            }
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .despacho-grid {
+                grid-template-columns: 1fr;
+            }
+            .botones-decision {
+                flex-direction: column;
+            }
+            .btn-decision {
+                max-width: 100%;
+            }
+            #chat-container {
+                bottom: 10px;
+                right: 10px;
+                width: calc(100vw - 20px);
+                height: 80vh;
+            }
+            .resultado-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    
+        /* ===== CAPA CÓMIC DINÁMICA ===== */
+        body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+            background-image:radial-gradient(rgba(255,107,0,.35) 1.4px,transparent 1.6px);background-size:16px 16px;
+            -webkit-mask-image:linear-gradient(135deg,#000 0%,transparent 55%);mask-image:linear-gradient(135deg,#000 0%,transparent 55%)}
+        body::after{content:"";position:fixed;inset:-50%;pointer-events:none;z-index:0;opacity:.08;
+            background:repeating-conic-gradient(from 0deg at 50% 50%,#fff 0 1.2deg,transparent 1.2deg 7deg);animation:giroLineas 60s linear infinite}
+        @keyframes giroLineas{to{transform:rotate(360deg)}}
+        #app{z-index:1;animation:appIn .6s cubic-bezier(.2,1.4,.4,1)}
+        @keyframes appIn{from{opacity:0;transform:scale(.92) rotate(-1deg)}to{opacity:1;transform:none}}
+
+        .menu-card{transition:transform .25s cubic-bezier(.2,1.6,.4,1),box-shadow .2s;position:relative;overflow:hidden}
+        .menu-card:nth-child(odd){transform:rotate(-.8deg)}.menu-card:nth-child(even){transform:rotate(.8deg)}
+        .menu-card:hover{transform:scale(1.04) rotate(0deg) translateY(-4px)!important;box-shadow:8px 8px 0 var(--naranja-pcad),12px 12px 0 #000}
+        .menu-card::after{content:"";position:absolute;top:0;left:-70%;width:40%;height:100%;
+            background:linear-gradient(100deg,transparent,rgba(255,255,255,.22),transparent);transform:skewX(-20deg);transition:left .5s}
+        .menu-card:hover::after{left:130%}
+        .menu-icon-wrap{animation:flota 3s ease-in-out infinite}
+        .menu-card:nth-child(2) .menu-icon-wrap{animation-delay:.4s}.menu-card:nth-child(3) .menu-icon-wrap{animation-delay:.8s}.menu-card:nth-child(4) .menu-icon-wrap{animation-delay:1.2s}
+        @keyframes flota{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}}
+
+        .pregunta-container{position:relative;animation:globo .45s cubic-bezier(.2,1.6,.4,1)}
+        .pregunta-container::after{content:"";position:absolute;left:34px;bottom:-14px;width:26px;height:26px;background:inherit;
+            border-right:3px solid #000;border-bottom:3px solid #000;transform:rotate(45deg) skew(10deg,10deg);z-index:-1}
+        @keyframes globo{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:none}}
+        .opcion{transition:transform .18s cubic-bezier(.2,1.6,.4,1),box-shadow .18s;animation:opcIn .4s cubic-bezier(.2,1.5,.4,1) backwards}
+        .opcion:nth-child(1){animation-delay:.05s}.opcion:nth-child(2){animation-delay:.12s}.opcion:nth-child(3){animation-delay:.19s}.opcion:nth-child(4){animation-delay:.26s}
+        @keyframes opcIn{from{opacity:0;transform:translateX(-40px) skewX(-8deg)}to{opacity:1;transform:none}}
+        .opcion:not(.bloqueada):hover{transform:translate(-3px,-3px) scale(1.02);box-shadow:5px 5px 0 var(--naranja-pcad)}
+        .opcion.correcta{animation:saltito .5s cubic-bezier(.2,1.8,.4,1)}
+        .opcion.incorrecta{animation:vibra .45s}
+        @keyframes saltito{0%{transform:scale(1)}40%{transform:scale(1.07) rotate(-1.5deg)}100%{transform:scale(1)}}
+        @keyframes vibra{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px) rotate(-1deg)}40%{transform:translateX(9px) rotate(1deg)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+        .feedback-box.show{animation:globo .4s cubic-bezier(.2,1.6,.4,1)}
+        .shake{animation:temblor .5s}
+        @keyframes temblor{0%,100%{transform:translate(0)}15%{transform:translate(-8px,4px) rotate(-.6deg)}30%{transform:translate(7px,-5px) rotate(.6deg)}45%{transform:translate(-6px,-3px)}60%{transform:translate(5px,4px)}80%{transform:translate(-3px,2px)}}
+        .flash{position:fixed;inset:0;pointer-events:none;z-index:998;animation:flasheo .35s forwards}
+        @keyframes flasheo{from{opacity:.55}to{opacity:0}}
+
+        /* Onomatopeyas */
+        .onoma{position:fixed;z-index:999;pointer-events:none;font-family:var(--comic-font);font-size:clamp(3rem,11vw,6.5rem);letter-spacing:3px;
+            color:var(--amarillo);-webkit-text-stroke:3px #000;paint-order:stroke fill;text-shadow:5px 5px 0 #000,8px 8px 0 var(--naranja-pcad);
+            transform:translate(-50%,-50%) rotate(var(--rot,-8deg)) scale(0);animation:onomaPop 1.1s cubic-bezier(.2,1.8,.4,1) forwards;white-space:nowrap}
+        .onoma.mal{color:var(--rojo)}
+        .onoma::before{content:"";position:absolute;inset:-30px -50px;z-index:-1;background:#fff;opacity:.95;border:4px solid #000;
+            clip-path:polygon(50% 0,60% 18%,82% 6%,78% 28%,100% 30%,84% 48%,98% 70%,76% 70%,74% 94%,56% 78%,42% 100%,38% 76%,14% 90%,22% 66%,0 56%,20% 44%,6% 22%,30% 26%,34% 4%,46% 20%)}
+        @keyframes onomaPop{0%{transform:translate(-50%,-50%) rotate(var(--rot,-8deg)) scale(0)}25%{transform:translate(-50%,-50%) rotate(var(--rot,-8deg)) scale(1.25)}
+            40%{transform:translate(-50%,-50%) rotate(var(--rot,-8deg)) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-70%) rotate(var(--rot,-8deg)) scale(1);opacity:0}}
+        .confeti{position:fixed;z-index:997;pointer-events:none;width:10px;height:14px;border:2px solid #000;animation:cae var(--d,1.4s) cubic-bezier(.2,.6,.4,1) forwards}
+        @keyframes cae{from{transform:translate(0,0) rotate(0)}to{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:0}}
+
+        /* Combo */
+        .combo{position:fixed;top:84px;right:14px;z-index:996;font-family:var(--comic-font);font-size:2rem;color:#fff;background:var(--rojo);
+            border:4px solid #000;box-shadow:5px 5px 0 #000;padding:2px 16px;transform:rotate(4deg);animation:comboIn .5s cubic-bezier(.2,1.8,.4,1),pulsa 1s .5s infinite;pointer-events:none}
+        @keyframes comboIn{from{transform:rotate(30deg) scale(0)}to{transform:rotate(4deg) scale(1)}}
+        @keyframes pulsa{50%{transform:rotate(4deg) scale(1.08)}}
+        .timer-bar.urgente{animation:latido .5s infinite}
+        @keyframes latido{50%{filter:brightness(1.6)}}
+
+        /* Transición tipo viñeta */
+        .wipe{position:fixed;inset:0;z-index:995;pointer-events:none;background:var(--naranja-pcad);
+            clip-path:polygon(0 0,0 0,-20% 100%,-30% 100%);animation:wipe .5s cubic-bezier(.7,0,.3,1) forwards}
+        @keyframes wipe{0%{clip-path:polygon(0 0,0 0,-25% 100%,-35% 100%)}50%{clip-path:polygon(0 0,125% 0,115% 100%,0 100%)}100%{clip-path:polygon(125% 0,125% 0,135% 100%,115% 100%)}}
+        @media (prefers-reduced-motion:reduce){body::after,.menu-icon-wrap,.combo{animation:none}.shake{animation:none}}
+
+        /* ===== IMÁGENES DE ESCENA + DISEÑO ADAPTATIVO ===== */
+        .ilus{border:4px solid #000;border-radius:14px;box-shadow:6px 6px 0 #000;overflow:hidden;background:#0d1f38;margin-bottom:16px;line-height:0}
+        .ilus.nueva{animation:globo .45s cubic-bezier(.2,1.6,.4,1)}
+        .ilus:empty{display:none}
+        .ilus svg{width:100%;height:auto;display:block}
+        .ilus .mov{animation:flota 3.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+        #app{max-width:1240px}
+        @media (min-width:1100px){.menu-grid{grid-template-columns:repeat(4,1fr)}}
+        /* Computador y celular en horizontal: imagen a la izquierda, pregunta a la derecha */
+        @media (min-width:900px),(orientation:landscape) and (min-width:600px){
+            #juego-screen.active,#despacho-screen.active{display:grid;grid-template-columns:minmax(300px,42%) 1fr;column-gap:26px;align-content:start}
+            #juego-screen.active>*,#despacho-screen.active>*{grid-column:2}
+            #juego-screen.active>.hud,#juego-screen.active>.timer-container,#despacho-screen.active>.hud{grid-column:1/-1}
+            #juego-screen.active>.ilus,#despacho-screen.active>.ilus{grid-column:1;grid-row:3/span 6;position:sticky;top:0;align-self:start}
+            #despacho-screen.active>.ilus{grid-row:2/span 6}
+            #despacho-screen .despacho-grid{grid-template-columns:1fr}
+        }
+        /* Tableta y celular */
+        @media (max-width:899px){.ilus svg{max-height:30vh}}
+        @media (max-width:768px){
+            body{padding:0;align-items:flex-start;min-height:100dvh}
+            #app{min-height:100dvh;border-radius:0;border-width:0;box-shadow:none;overflow:visible;padding-top:env(safe-area-inset-top)}
+            .screen{overflow:visible;padding:14px 12px calc(14px + env(safe-area-inset-bottom))}
+            header{position:sticky;top:0;z-index:20;padding:8px 12px;gap:8px}
+            .badge-pcad{width:38px;height:38px}
+            .header-titulos h1{font-size:1.15rem}
+            .header-sub{font-size:.58rem}
+            .btn-icon{width:38px;height:38px}
+            .header-actions{gap:6px}
+            .hud{flex-wrap:wrap;gap:6px}.hud-item{font-size:.72rem}
+            .pregunta-texto{font-size:1rem;line-height:1.4}
+            .opcion{min-height:56px;font-size:.95rem;padding:12px}
+            .ilus{margin-bottom:14px;box-shadow:4px 4px 0 #000}
+            .action-row{position:sticky;bottom:0;z-index:15;padding:10px 0 calc(8px + env(safe-area-inset-bottom));background:linear-gradient(transparent,var(--azul-superficie) 28%);gap:8px}
+            .action-row button{flex:1;min-height:48px;font-size:.88rem}
+            #btn-chat{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+            .combo{top:70px;font-size:1.4rem;right:8px}
+            .menu-card:nth-child(n){transform:none}
+        }
+        @media (max-width:420px){.header-sub{display:none}.header-titulos h1{font-size:1.05rem}}
+        @media (max-height:480px) and (orientation:landscape){header{position:static}.ilus svg{max-height:62vh}}
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- HEADER OPERATIVO -->
+    <header>
+        <div class="logo-area" onclick="volverAlMenu()">
+            <!-- Emblema Vectorial PCAD Estilo Cómic -->
+            <svg class="badge-pcad" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="#FFD600" stroke="#000" stroke-width="6"/>
+                <circle cx="50" cy="50" r="38" fill="#0D274D" stroke="#000" stroke-width="4"/>
+                <polygon points="50,18 80,72 20,72" fill="#FF6B00" stroke="#000" stroke-width="4"/>
+                <circle cx="50" cy="54" r="7" fill="#00E676" stroke="#000" stroke-width="3"/>
+            </svg>
+            <div class="header-titulos">
+                <h1>Operaciones <span>PCAD</span></h1>
+                <div class="header-sub">
+                    <span class="status-dot"></span>
+                    SIMULADOR TÁCTICO UNES | TRAYECTOS III Y IV
+                </div>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-icon" id="btn-sound" onclick="toggleSonido()" title="Sonido Activo / Silencio">🔊</button>
+            <button class="btn-icon" onclick="abrirManual()" title="Manual de Referencia Rápida">📖</button>
+            <button class="btn-icon" onclick="volverAlMenu()" title="Menú Principal">🏠</button>
+        </div>
+    </header>
+
+    <!-- PANTALLA: MENÚ PRINCIPAL -->
+    <div id="menu-screen" class="screen active">
+        <div class="banner-intro">
+            <div>
+                <h2>CENTRO DE MANDO Y SIMULACIÓN</h2>
+                <p>Formación Operacional en Protección Civil y Administración de Desastres.</p>
+            </div>
+            <div class="stats-badge-group">
+                <div class="stat-pill">RÉCORD: <span id="menu-record-txt">0 pts</span></div>
+                <div class="stat-pill">RANGO: <span id="menu-rango-txt">Aspirante</span></div>
+            </div>
+        </div>
+        
+        <div class="menu-grid">
+            <!-- MÓDULO 1 -->
+            <div class="menu-card" onclick="iniciarJuegoTeorico('dificil')">
+                <div class="menu-icon-wrap">📡</div>
+                <span class="menu-tag">GUÍA 3 • DIFÍCIL</span>
+                <div class="menu-title">Comunicación y SAR</div>
+                <div class="menu-desc">Fases INCERFA/ALERFA/DESTREFA, vocería oficial de medios, LOPCYMAT y diamante NFPA.</div>
+                <div class="menu-footer">
+                    <span>10 Desafíos Tácticos</span>
+                    <span class="arrow">➔</span>
+                </div>
+            </div>
+
+            <!-- MÓDULO 2 -->
+            <div class="menu-card" onclick="iniciarJuegoTeorico('experto')">
+                <div class="menu-icon-wrap">🧠</div>
+                <span class="menu-tag">GUÍA 4 • EXPERTO</span>
+                <div class="menu-title">Gestión de Riesgo y SIG</div>
+                <div class="menu-desc">Sensores Radar vs Presión, Modelo Digital de Elevaciones (MDE), bandas NIR y Marco Lógico.</div>
+                <div class="menu-footer">
+                    <span>10 Desafíos Avanzados</span>
+                    <span class="arrow">➔</span>
+                </div>
+            </div>
+
+            <!-- MÓDULO 3 -->
+            <div class="menu-card" onclick="iniciarJuegoEstructuras()">
+                <div class="menu-icon-wrap">🏗️</div>
+                <span class="menu-tag">INSPECCIÓN CÓMIC</span>
+                <div class="menu-title">Triaje Estructural Sismo</div>
+                <div class="menu-desc">Regla de oro: El Esqueleto vs La Piel. Fisuras, falla por corte a 45°, columnas y cabillas expuestas.</div>
+                <div class="menu-footer">
+                    <span>Simulación Visual Cómic</span>
+                    <span class="arrow">➔</span>
+                </div>
+            </div>
+
+            <!-- MÓDULO 4 -->
+            <div class="menu-card" onclick="iniciarDespachoEDAN()">
+                <div class="menu-icon-wrap">🚨</div>
+                <span class="menu-tag">SALA SITUACIONAL</span>
+                <div class="menu-title">Despacho y EDAN</div>
+                <div class="menu-desc">Recepción de llamados por radiofrecuencia, priorización de alertas y activación de brigadas.</div>
+                <div class="menu-footer">
+                    <span>Toma de Decisiones In Situ</span>
+                    <span class="arrow">➔</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA: JUEGO TEÓRICO (DIFÍCIL / EXPERTO) -->
+    <div id="juego-screen" class="screen">
+        <div class="hud">
+            <div class="hud-group">
+                <div class="hud-item" id="materia-txt">Materia</div>
+                <div class="hud-item">Pregunta: <span id="progreso-txt">1/10</span></div>
+            </div>
+            <div class="hud-group">
+                <div class="hud-item">Puntos: <span id="puntos-txt">0</span></div>
+                <div class="racha-badge" id="racha-badge">🔥 Racha: <span id="racha-txt">0</span></div>
+            </div>
+        </div>
+
+        <div class="timer-container" id="timer-bar-wrap">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+
+        <div class="ilus" id="ilus-juego" aria-live="polite"></div>
+
+        <div class="pregunta-container">
+            <span class="pregunta-categoria" id="categoria-badge">OPERACIONES PCAD</span>
+            <div id="pregunta-container-txt" class="pregunta-texto"></div>
+        </div>
+
+        <div id="opciones-container" class="opciones-grid"></div>
+
+        <div id="feedback-container" class="feedback-box"></div>
+
+        <div class="action-row">
+            <button class="btn-secondary" onclick="pedirPistaTutor()">💡 Pista del Instructor</button>
+            <button id="btn-siguiente" class="btn-primary" onclick="siguientePregunta()" disabled>
+                Siguiente Pregunta ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA: INSPECCIÓN ESTRUCTURAL ESTILO CÓMIC -->
+    <div id="estructuras-screen" class="screen">
+        <div class="hud">
+            <div class="hud-item">Inspección Post-Sismo: <span id="est-sub-txt">Regla de Oro</span></div>
+            <div class="hud-item">Escenario: <span id="estructuras-progreso">1/6</span></div>
+            <div class="hud-item">Aciertos: <span id="est-aciertos-txt">0</span></div>
+        </div>
+        
+        <div class="comic-panel-container">
+            <div class="comic-vignette-tag" id="comic-vignette-tag">PANEL #1 • EVALUACIÓN TÁCTICA</div>
+            <div class="svg-canvas-wrap" id="dibujo-svg-container">
+                <!-- Se inyectan las viñetas vectoriales en estilo cómic -->
+            </div>
+            <div class="est-titulo-wrap">
+                <h3 id="est-titulo" class="est-titulo"></h3>
+                <p id="est-desc" class="est-desc"></p>
+            </div>
+        </div>
+
+        <div id="estructuras-feedback" class="feedback-box"></div>
+        
+        <div id="estructuras-botones" class="botones-decision">
+            <button class="btn-decision btn-seguro" onclick="evaluarEstructura(false)">
+                🛡️ Seguro / Habitable
+            </button>
+            <button class="btn-decision btn-peligro" onclick="evaluarEstructura(true)">
+                ⚠️ Peligro / Evacuar
+            </button>
+        </div>
+
+        <div class="action-row" id="estructuras-next-row" style="display: none;">
+            <button class="btn-secondary" onclick="volverAlMenu()">Abandonar</button>
+            <button id="btn-siguiente-estructura" class="btn-primary" onclick="siguienteEstructura()">
+                Siguiente Viñeta ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA: SALA SITUACIONAL Y DESPACHO EDAN -->
+    <div id="despacho-screen" class="screen">
+        <div class="hud">
+            <div class="hud-item">Sala Situacional 171 / 911</div>
+            <div class="hud-item">Incidente: <span id="despacho-progreso">1/4</span></div>
+            <div class="hud-item">Efectividad: <span id="despacho-puntos">0 pts</span></div>
+        </div>
+
+        <div class="ilus" id="ilus-despacho"></div>
+
+        <div class="despacho-grid">
+            <div class="despacho-card">
+                <h4>📡 Transmisión Radial Operativa</h4>
+                <div class="radio-transcript" id="despacho-radio-txt">
+                    "Central PCAD, aquí Móvil 4. Se observa crecida súbita de quebrada con arrastre de sedimentos en sector La Vega..."
+                </div>
+            </div>
+            <div class="despacho-card">
+                <h4>📋 Protocolo de Despacho</h4>
+                <p id="despacho-mision-txt" style="font-size: 0.9rem; color: var(--blanco); line-height: 1.45;">
+                    Seleccione el nivel de alerta y la acción inmediata según los protocolos nacionales.
+                </p>
+            </div>
+        </div>
+
+        <div id="despacho-opciones" class="opciones-grid"></div>
+        <div id="despacho-feedback" class="feedback-box"></div>
+
+        <div class="action-row">
+            <button class="btn-secondary" onclick="volverAlMenu()">Cancelar Despacho</button>
+            <button id="btn-siguiente-despacho" class="btn-primary" onclick="siguienteDespacho()" disabled>
+                Siguiente Incidente ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- PANTALLA: RESULTADOS TÁCTICOS -->
+    <div id="resultado-screen" class="screen">
+        <div class="resultado-box">
+            <div class="rango-emblema" id="res-icono">🎖️</div>
+            <div class="nota-grande"><span id="res-nota">18</span><span>/20</span></div>
+            <div class="calificacion-unes" id="res-calificacion">SOBRESALIENTE</div>
+            <p id="res-mensaje" style="color: var(--texto-suave); font-size: 0.95rem; line-height: 1.4;"></p>
+
+            <div class="resultado-stats">
+                <div>
+                    <div class="res-stat-val" id="res-puntos">0</div>
+                    <div class="res-stat-lbl">Puntos Obtenidos</div>
+                </div>
+                <div>
+                    <div class="res-stat-val" id="res-efectividad">0%</div>
+                    <div class="res-stat-lbl">Efectividad Táctica</div>
+                </div>
+                <div>
+                    <div class="res-stat-val" id="res-tiempo">0s</div>
+                    <div class="res-stat-lbl">Tiempo Empleado</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+                <button class="btn-secondary" onclick="volverAlMenu()">Menú Principal</button>
+                <button class="btn-primary" onclick="reiniciarModuloActual()">Reintentar Misión</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTÓN Y VENTANA CHATBOT -->
+    <button id="btn-chat" onclick="toggleChat()">
+        <span>🤖</span>
+        <span>Tutor PCAD</span>
+    </button>
+    
+    <div id="chat-container">
+        <div id="chat-header">
+            <div>
+                <span class="comic-title">INSTRUCTOR TÁCTICO</span>
+            </div>
+            <span style="cursor:pointer; font-size: 1.4rem; font-weight: 900;" onclick="toggleChat()">✖</span>
+        </div>
+        <div id="chat-chips">
+            <div class="chip" onclick="enviarChip('SAR')">🔍 Fases SAR</div>
+            <div class="chip" onclick="enviarChip('Estructuras')">🧱 Esqueleto vs Piel</div>
+            <div class="chip" onclick="enviarChip('NFPA')">⚠️ Rombo NFPA 704</div>
+            <div class="chip" onclick="enviarChip('SIG')">🛰️ SIG y MDE</div>
+            <div class="chip" onclick="enviarChip('LOPCYMAT')">⚖️ LOPCYMAT</div>
+        </div>
+        <div id="chat-messages">
+            <div class="msg msg-bot">
+                ¡Saludos, discente! Soy tu instructor táctico de PCAD. Si tienes dudas en cualquier ejercicio, hazme una consulta o usa los accesos rápidos de arriba. ¡Te daré pistas para triunfar!
+            </div>
+        </div>
+        <div id="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Pregunta sobre SAR, sismos, SIG..." onkeypress="if(event.key==='Enter') enviarMensajeChat()">
+            <button id="chat-send" onclick="enviarMensajeChat()">➤</button>
+        </div>
+    </div>
+
+    <!-- MODAL MANUAL DE REFERENCIA RÁPIDA -->
+    <div id="modal-manual" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📖 MANUAL TÁCTICO DE CAMPO PCAD</h3>
+                <button class="modal-close" onclick="cerrarManual()">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="manual-section">
+                    <h4>🚨 Fases de Emergencia SAR (Búsqueda y Salvamento)</h4>
+                    <p>• <strong>INCERFA (Incertidumbre):</strong> Falta de contacto o retraso no justificado de una nave.<br>
+                    • <strong>ALERFA (Alerta):</strong> Se teme por la seguridad de la nave o personas; no hay confirmación de siniestro pero existe riesgo evidente.<br>
+                    • <strong>DESTREFA (Desastre / Siniestro):</strong> Certeza absoluta de que la nave y sus víctimas están en peligro grave e inminente.</p>
+                </div>
+                <div class="manual-section">
+                    <h4>🏗️ Evaluación de Daños Post-Sismo (Regla de Oro)</h4>
+                    <p>• <strong>El Esqueleto (Elementos Primarios):</strong> Columnas, vigas y nodos de concreto armado. Grietas a 45° indican cizallamiento crítico. Cabillas expuestas dobladas = <strong>EVACUAR INMEDIATAMENTE</strong>.<br>
+                    • <strong>La Piel (Elementos Secundarios):</strong> Paredes de tabiquería. Las grietas en 'X' en ladrillos absorben sismo. Si las columnas están intactas, no hay riesgo de colapso global súbito.<br>
+                    • <strong>Fisuras (&lt; 1 mm):</strong> Si el canto de una moneda común no entra en la ranura, es una microfisura superficial de pintura o friso.</p>
+                </div>
+                <div class="manual-section">
+                    <h4>🧪 Diamante NFPA 704 (Materiales Peligrosos)</h4>
+                    <p>• <strong>Azul:</strong> Peligro para la Salud (0 normal a 4 mortal).<br>
+                    • <strong>Rojo:</strong> Inflamabilidad.<br>
+                    • <strong>Amarillo:</strong> Reactividad / Inestabilidad.<br>
+                    • <strong>Blanco:</strong> Riesgos Especiales (W: No usar agua, OX: Oxidante).</p>
+                </div>
+                <div class="manual-section">
+                    <h4>🛰️ Sensores y Tecnología SIG en Gestión de Riesgo</h4>
+                    <p>• <strong>Sensor RADAR:</strong> Sin contacto con el agua, resiste crecidas de lodo y rocas.<br>
+                    • <strong>MDE:</strong> Modela gradientes de pendiente y vectores de flujo de cuencas.<br>
+                    • <strong>Banda NIR (Infrarrojo Cercano):</strong> Detecta biomasa vegetal sana y humedad en el terreno.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =======================================================
+       SINTETIZADOR DE AUDIO WEB (EFECTOS DE SONIDO SINESTÉSICOS)
+       ======================================================= */
+    class AudioTactico {
+        constructor() {
+            this.ctx = null;
+            this.silencio = false;
+        }
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        }
+        beep(freq = 440, type = 'sine', duration = 0.08, vol = 0.15) {
+            if (this.silencio) return;
+            try {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            } catch(e) {}
+        }
+        acierto() {
+            if (this.silencio) return;
+            this.beep(523.25, 'triangle', 0.1, 0.2);
+            setTimeout(() => this.beep(659.25, 'triangle', 0.12, 0.25), 90);
+            setTimeout(() => this.beep(783.99, 'sine', 0.2, 0.25), 180);
+        }
+        error() {
+            if (this.silencio) return;
+            this.beep(220, 'sawtooth', 0.15, 0.2);
+            setTimeout(() => this.beep(164.81, 'sawtooth', 0.25, 0.22), 120);
+        }
+        click() {
+            this.beep(800, 'sine', 0.03, 0.08);
+        }
+        rogerBip() {
+            if (this.silencio) return;
+            this.beep(1200, 'sine', 0.04, 0.15);
+            setTimeout(() => this.beep(1800, 'sine', 0.06, 0.18), 50);
+        }
+        fanfarria() {
+            if (this.silencio) return;
+            const notas = [523.25, 659.25, 783.99, 1046.50];
+            notas.forEach((n, i) => {
+                setTimeout(() => this.beep(n, 'triangle', 0.2, 0.25), i * 140);
+            });
+        }
+    }
+    const sonido = new AudioTactico();
+
+    function toggleSonido() {
+        sonido.silencio = !sonido.silencio;
+        const btn = document.getElementById('btn-sound');
+        btn.innerText = sonido.silencio ? '🔇' : '🔊';
+        if (!sonido.silencio) sonido.rogerBip();
+    }
+
+    // --- BANCO DE PREGUNTAS TÁCTICAS UNES (GUÍA 3 Y 4) ---
+    const PREGUNTAS_DIFICIL = [
+        {
+            materia: "Comunicación de Riesgos",
+            pregunta: "¿Cuál es la diferencia vital entre 'Información' y 'Comunicación' durante un desastre socio-natural?",
+            opciones: [
+                "Son conceptos idénticos en la gestión de emergencias.",
+                "La información es unidireccional (emisor a receptor); la comunicación exige reciprocidad, retroalimentación y comprensión mutua.",
+                "La comunicación es exclusiva para la prensa televisiva y radial.",
+                "La información técnica solo puede transmitirse en frecuencias VHF."
+            ],
+            correcta: 1,
+            justificacion: "La comunicación efectiva requiere bidireccionalidad para constatar que las comunidades en riesgo comprendieron las instrucciones de evacuación y alertas.",
+            pista: "Recuerda el principio de bidireccionalidad y verificación del mensaje."
+        },
+        {
+            materia: "Comunicación de Riesgos",
+            pregunta: "Como funcionario de PCAD ante los medios de comunicación social, ¿cuál debe ser tu rol principal?",
+            opciones: [
+                "Emitir opiniones personales y pronósticos no confirmados.",
+                "Actuar como fuente informativa oficial, técnica y veraz, evitando el sensacionalismo.",
+                "Promover la imagen política de las autoridades de turno.",
+                "Restringir por completo cualquier dato para evitar alarma pública."
+            ],
+            correcta: 1,
+            justificacion: "El vocero de PCAD representa la voz oficial y científica. Debe emitir datos confirmados para disipar la zozobra y coordinar la respuesta comunitaria.",
+            pista: "El manual define al funcionario como 'fuente informativa oficial y veraz'."
+        },
+        {
+            materia: "Ingeniería y Estructuras",
+            pregunta: "¿Por qué las columnas son catalogadas como 'elementos estructurales primarios'?",
+            opciones: [
+                "Porque sirven de marco para fijar puertas y ventanas.",
+                "Porque soportan y transmiten las cargas verticales y laterales directas a las fundaciones.",
+                "Porque son de mayor costo constructivo que las paredes.",
+                "Porque protegen las tuberías sanitarias del edificio."
+            ],
+            correcta: 1,
+            justificacion: "Las columnas constituyen el 'esqueleto' resistente. Si una columna colapsa, compromete la estabilidad global del edificio.",
+            pista: "Forman el esqueleto principal de transmisión de cargas gravitacionales y sísmicas."
+        },
+        {
+            materia: "Ingeniería y Estructuras",
+            pregunta: "En una inspección post-sismo observas grietas diagonales inclinadas a 45° en una viga de concreto. Esto evidencia:",
+            opciones: [
+                "Falla por tracción y flexión moderada.",
+                "Falla por esfuerzos de corte (cizallamiento), lo cual es crítico y frágil.",
+                "Desprendimiento inofensivo de la capa de pintura.",
+                "Exceso de humedad absorbida por el cemento."
+            ],
+            correcta: 1,
+            justificacion: "Las fisuras diagonales a 45° son el signo clásico de esfuerzo cortante excesivo en el concreto armado, requiriendo apuntalamiento o evacuación.",
+            pista: "Se trata de un esfuerzo de cortante diagonal muy peligroso."
+        },
+        {
+            materia: "Búsqueda y Salvamento (SAR)",
+            pregunta: "En las operaciones de Búsqueda y Salvamento (SAR), ¿qué condición define a la fase INCERFA?",
+            opciones: [
+                "Certeza total del siniestro o choque de la aeronave o embarcación.",
+                "Fase de incertidumbre generada por la falta de reporte o retraso de la nave.",
+                "Rescate exitoso de los tripulantes.",
+                "Activación de la fase de rescate aéreo internacional."
+            ],
+            correcta: 1,
+            justificacion: "INCERFA (Uncertainty Phase) inicia cuando una aeronave/embarcación no se reporta en el tiempo previsto, ameritando recolección de información.",
+            pista: "INCERFA deriva de la palabra 'Incertidumbre'."
+        },
+        {
+            materia: "Búsqueda y Salvamento (SAR)",
+            pregunta: "¿Qué situación operativa marca la activación inmediata de la fase DESTREFA?",
+            opciones: [
+                "Simple falla de radio en una nave sobrevolando espacio aéreo nacional.",
+                "Evidencia irrefutable de que la nave y sus ocupantes se encuentran en peligro grave e inminente o han zozobrado.",
+                "Cancelación definitiva de la misión por condiciones meteorológicas.",
+                "Reabastecimiento de combustible en helipuerto alterno."
+            ],
+            correcta: 1,
+            justificacion: "DESTREFA (Distress Phase) es la fase máxima de socorro cuando el accidente es un hecho o el peligro es letal e inminente.",
+            pista: "Es la fase más crítica: 'Desastre o Peligro Inminente'."
+        },
+        {
+            materia: "Seguridad y Salud Laboral",
+            pregunta: "En el diamante o rombo de materiales peligrosos NFPA 704, ¿qué representa el cuadrante de color AZUL?",
+            opciones: [
+                "Riesgo de Inflamabilidad.",
+                "Nivel de Peligro para la Salud.",
+                "Inestabilidad química y reactividad.",
+                "Reactividad especial con el agua."
+            ],
+            correcta: 1,
+            justificacion: "En el estándar NFPA 704: Azul = Salud, Rojo = Inflamabilidad, Amarillo = Reactividad/Inestabilidad, Blanco = Riesgos especiales.",
+            pista: "El azul identifica la toxicidad y el daño a la salud humana."
+        },
+        {
+            materia: "Seguridad Laboral (LOPCYMAT)",
+            pregunta: "Según la LOPCYMAT en Venezuela, ¿cómo se diferencia un 'Incidente' de un 'Accidente de Trabajo'?",
+            opciones: [
+                "El incidente siempre genera lesiones corporales graves.",
+                "El incidente es un suceso imprevisto que bajo circunstancias ligeramente distintas pudo ocasionar daños, pero no produjo lesiones.",
+                "El incidente solo aplica a contratistas temporales.",
+                "No existe diferencia legal en el marco jurídico venezolano."
+            ],
+            correcta: 1,
+            justificacion: "Un incidente es un 'cuasi-accidente' o advertencia de riesgo sin víctimas ni daños graves que debe investigarse preventivamente.",
+            pista: "El incidente no deja lesiones ni daños físicos significativos."
+        },
+        {
+            materia: "Evaluación de Daños (EDAN)",
+            pregunta: "Si en una inspección tras un sismo encuentras cabillas de refuerzo expuestas y flectadas (dobladas) en un nodo estructural:",
+            opciones: [
+                "Indicar friso correctivo de cemento para cubrir el acero.",
+                "Declarar inmediatamente riesgo de colapso, aplicar la Regla de Oro y desalojar el inmueble.",
+                "Autorizar el uso de los pisos superiores.",
+                "Clasificar la estructura como habitable con daños leves."
+            ],
+            correcta: 1,
+            justificacion: "Las cabillas flectadas implican pérdida total de la ductilidad y capacidad de carga del nodo. La estructura está al borde del colapso.",
+            pista: "Aplica la Regla de Oro: ¡Evacuación inmediata y acordonamiento!"
+        },
+        {
+            materia: "Evaluación de Daños (EDAN)",
+            pregunta: "Según la metodología de evaluación rápida de edificaciones, una 'Fisura' se distingue de una grieta porque:",
+            opciones: [
+                "Atraviesa de lado a lado la pared estructural.",
+                "Es una rotura superficial menor a 1 mm (no entra el borde de una moneda) que suele limitarse al acabado o pintura.",
+                "Tiene una inclinación obligatoria de 45 grados.",
+                "Solo se produce en estructuras de madera."
+            ],
+            correcta: 1,
+            justificacion: "Las fisuras capilares (< 1 mm) corresponden a retracción del friso o pintura, a diferencia de grietas estructurales profundas.",
+            pista: "Si el borde de una moneda no penetra, es una fisura superficial inofensiva."
+        }
+    ];
+
+    const PREGUNTAS_EXPERTO = [
+        {
+            materia: "Gestión Holística del Riesgo",
+            pregunta: "El enfoque contemporáneo y holístico de la Gestión de Riesgos en Venezuela promueve:",
+            opciones: [
+                "Enfocarse únicamente en la compra de camiones y equipos de rescate.",
+                "La articulación multisectorial del Estado junto a la corresponsabilidad comunitaria, atacando la vulnerabilidad social.",
+                "Intervenir únicamente cuando el desastre ya haya cobrado víctimas fatales.",
+                "Delegar toda la gestión en organismos internacionales sin participación local."
+            ],
+            correcta: 1,
+            justificacion: "La gestión holística trasciende la atención reactiva; busca la reducción de la vulnerabilidad mediante planificación territorial y poder popular.",
+            pista: "Involucra al Estado, la comunidad y el desarrollo territorial integral."
+        },
+        {
+            materia: "Sistemas de Información Geográfica",
+            pregunta: "¿Por qué el Modelo Digital de Elevaciones (MDE) es indispensable en el análisis de amenazas hidrometeorológicas?",
+            opciones: [
+                "Porque permite tomar fotografías a color de las fachadas de viviendas.",
+                "Porque calcula gradientes de pendiente, cuencas visuales y vectores de flujo para simular inundaciones y aludes torrenciales.",
+                "Porque mide la velocidad del viento en tiempo real en la estratósfera.",
+                "Porque bloquea la señal de radiointerferencias en las operaciones SAR."
+            ],
+            correcta: 1,
+            justificacion: "El MDE aporta la cota altitudinal Z, permitiendo modelar matemáticamente por dónde correrán las aguas de escorrentía en una cuenca.",
+            pista: "El MDE analiza la topografía tridimensional y el drenaje natural de aguas."
+        },
+        {
+            materia: "Teledetección Aplicada",
+            pregunta: "En imágenes satelitales multiespectrales, la banda del Infrarrojo Cercano (NIR) es primordial para:",
+            opciones: [
+                "Medir la profundidad exacta de pozos subterráneos de agua potable.",
+                "Evaluar el vigor y contenido hídrico de la vegetación, así como delimitar zonas quemadas por incendios forestales.",
+                "Detectar la presencia de metales bajo tierra.",
+                "Visualizar a personas atrapadas dentro de estructuras de hormigón."
+            ],
+            correcta: 1,
+            justificacion: "La clorofila de la vegetación sana refleja intensamente la longitud de onda del infrarrojo cercano (NIR), sirviendo para mapear biomasa y daño por fuego.",
+            pista: "La vegetación sana tiene un rebote reflectivo altísimo en la banda NIR."
+        },
+        {
+            materia: "Alerta Temprana y Sensores",
+            pregunta: "En una estación hidrológica de alerta temprana de PCAD, ¿cuál es la ventaja del sensor tipo RADAR frente al de presión sumergido?",
+            opciones: [
+                "Es mucho más pesado y requiere baterías de automóvil.",
+                "Opera sin contacto físico con el caudal, evitando ser destruido o bloqueado por lodo, troncos y sedimentos en crecidas súbitas.",
+                "Es capaz de hervir el agua para purificarla.",
+                "Mide la conductividad eléctrica de las rocas del fondo."
+            ],
+            correcta: 1,
+            justificacion: "En ríos de régimen torrencial (como en la cordillera de la Costa o los Andes), los sensores sumergidos son arrastrados; el RADAR aéreo no tiene contacto.",
+            pista: "Al operar 'sin contacto', sobrevive a las crecidas de lodo y escombros."
+        },
+        {
+            materia: "Sistemas SAR Internacionales",
+            pregunta: "La constelación satelital COSPAS-SARSAT es empleada por PCAD y autoridades aeronáuticas para:",
+            opciones: [
+                "Detectar y geolocalizar señales de socorro emitidas por radiobalizas de emergencia (ELT, EPIRB y PLB).",
+                "Monitorear conversaciones de radiopatrullas policiales.",
+                "Predecir erupciones volcánicas con tres meses de anticipación.",
+                "Proporcionar internet satelital a turistas en parques nacionales."
+            ],
+            correcta: 0,
+            justificacion: "COSPAS-SARSAT es el sistema humanitario global que triangula las balizas de 406 MHz para el salvamento aéreo, marítimo y terrestre.",
+            pista: "Es el sistema global de triangulación de radiobalizas de socorro."
+        },
+        {
+            materia: "Operaciones con Helicópteros",
+            pregunta: "En una maniobra de rescate con aeronave de ala rotatoria (helicóptero), ¿por qué es obligatorio aterrizar o descargar la estática antes de tocar la línea de carga?",
+            opciones: [
+                "Para evitar descalibrar el altímetro de cabina.",
+                "Porque la fricción del rotor con el aire genera una potente carga electrostática que puede lesionar gravemente al rescatista en tierra.",
+                "Para no ahuyentar la fauna circundante.",
+                "Para verificar la presión de los neumáticos del tren de aterrizaje."
+            ],
+            correcta: 1,
+            justificacion: "El rotor acumula electricidad estática de miles de voltios. La línea debe tocar tierra (grounding) antes de que el rescatista la manipule.",
+            pista: "Existe un riesgo mortal de descarga eléctrica si no se hace contacto a tierra previo."
+        },
+        {
+            materia: "Comunicación y Redes en Crisis",
+            pregunta: "¿Cuál es la recomendación técnica primordial para el manejo de redes sociales por salas situacionales de PCAD durante una emergencia?",
+            opciones: [
+                "Publicar opiniones y conjeturas para generar tráfico.",
+                "Emitir boletines sintéticos, con lenguaje claro, georreferenciados y datos verificados para cortar la desinformación.",
+                "Desactivar todas las cuentas oficiales para que la población no haga preguntas.",
+                "Esperar 48 horas antes de hacer cualquier pronunciamiento público."
+            ],
+            correcta: 1,
+            justificacion: "La inmediatez y exactitud de los canales oficiales frena los rumores y la histeria colectiva en redes sociales.",
+            pista: "Mensajes claros, oficiales, verificados y con georreferenciación."
+        },
+        {
+            materia: "Gerencia de Proyectos PCAD",
+            pregunta: "En la Matriz de Marco Lógico (MML) para proyectos de reducción de riesgos, los 'Supuestos' representan:",
+            opciones: [
+                "Los costos imprevistos del presupuesto de nómina.",
+                "Acontecimientos o condiciones externas fuera del control directo de la gerencia que deben cumplirse para lograr los objetivos.",
+                "Sanciones administrativas a funcionarios indisciplinados.",
+                "Las metas cuantitativas de entrega de insumos."
+            ],
+            correcta: 1,
+            justificacion: "Los supuestos son factores contextuales (políticos, climáticos, sociales) que inciden en el éxito pero escapan al control del proyecto.",
+            pista: "Condiciones externas fuera del control del equipo ejecutor."
+        },
+        {
+            materia: "Sala Situacional y Crisis",
+            pregunta: "Ante la propagación viral de un rumor infundado sobre un falso tsunami en las costas venezolanas, la respuesta de PCAD debe ser:",
+            opciones: [
+                "Ignorar el rumor esperando que desaparezca espontáneamente.",
+                "Emitir una alerta de desmentido con respaldo sismológico de FUNVISIS y difundir protocolos reales de calma.",
+                "Ordenar la desconexión del internet en los estados costeros.",
+                "Culpar a los usuarios de las redes sociales sin emitir datos técnicos."
+            ],
+            correcta: 1,
+            justificacion: "El combate al rumor se fundamenta en la vocería científica oportuna, en este caso articulando con el ente oficial sismológico (FUNVISIS).",
+            pista: "Desmentido técnico inmediato apoyado en los centros sismológicos oficiales."
+        },
+        {
+            materia: "Ordenamiento Territorial y Riesgo",
+            pregunta: "La incorporación de la gestión de riesgos en la planificación del uso del suelo busca principalmente:",
+            opciones: [
+                "Evitar la urbanización de áreas con amenazas no mitigables y regular densidades poblacionales en zonas seguras.",
+                "Eliminar por completo las actividades agrícolas e industriales del país.",
+                "Fomentar la autoconstrucción sin asesoría técnica en laderas empinadas.",
+                "Aumentar la especulación inmobiliaria en terrenos inundables."
+            ],
+            correcta: 0,
+            justificacion: "El ordenamiento territorial sostenible impide que nuevos asentamientos humanos se instalen sobre fallas activas o cauces de inundación.",
+            pista: "Evita edificar en zonas de alta susceptibilidad a deslizamientos e inundaciones."
+        }
+    ];
+
+    // --- ESCENARIOS VECTORIALES VISUALES TIPO CÓMIC ---
+    const ESCENARIOS_ESTRUCTURA = [
+        {
+            titulo: "FALLA POR CORTE A 45° EN COLUMNA",
+            subtitulo: "Elemento Primario (El Esqueleto)",
+            descripcion: "La columna principal del sótano cruje bajo el sismo. Una fisura diagonal a 45° atraviesa el concreto con expulsión de fragmentos y pérdida de capacidad portante.",
+            esPeligro: true,
+            tipo: "corte_columna",
+            feedback: "¡DECISIÓN CRÍTICA Y ACERTADA! Falla por cortante en columna principal. La capacidad de soporte vertical está rota. ¡PELIGRO INMINENTE DE COLAPSO: EVACUAR!"
+        },
+        {
+            titulo: "GRIETAS EN 'X' EN TABIQUERÍA",
+            subtitulo: "Elemento Secundario (La Piel)",
+            descripcion: "Pared de bloques de arcilla con grietas cruzadas en 'X'. Sin embargo, las columnas y vigas de concreto que la enmarcan están intactas y sin deformación.",
+            esPeligro: false,
+            tipo: "pared_x",
+            feedback: "¡CORRECTO! El daño es en la tabiquería (La Piel). Las grietas en 'X' indican que la pared disipó energía sísmica, pero el pórtico estructural está sano. ¡No hay colapso inminente!"
+        },
+        {
+            titulo: "PRUEBA DETECTIVE DE LA MONEDA",
+            subtitulo: "Microfisura Superficial",
+            descripcion: "El inspector realiza la prueba táctil en la pared con el canto de una moneda común. La moneda no penetra en la línea (&lt; 0.5 mm).",
+            esPeligro: false,
+            tipo: "prueba_moneda",
+            feedback: "¡CORRECTO! Es una fisura capilar superficial en el friso o masilla de pintura. No compromete en absoluto la estabilidad estructural."
+        },
+        {
+            titulo: "NODO FRACTURADO: ¡CABILLAS EXPUESTAS!",
+            subtitulo: "Pérdida de Confinamiento en Unión",
+            descripcion: "El hormigón estalló en la unión viga-columna. Se observan estribos reventados y las barras de acero longitudinales flectadas en 'S' bajo compresión extrema.",
+            esPeligro: true,
+            tipo: "acero_expuesto",
+            feedback: "¡PELIGRO EXTREMO! El nodo ha perdido confinamiento y las cabillas sufrieron pandeo plástico. APLICAR REGLA DE ORO: EVACUACIÓN Y PERÍMETRO DE SEGURIDAD."
+        },
+        {
+            titulo: "HUNDIMIENTO ASIMÉTRICO DEL TERRENO",
+            subtitulo: "Asentamiento Diferencial de Suelo",
+            descripcion: "El estrato del suelo cedió bajo una de las esquinas del edificio. La estructura muestra un desplome angular visible y grietas escalonadas en la base.",
+            esPeligro: true,
+            tipo: "asentamiento",
+            feedback: "¡CORRECTO! El asentamiento diferencial genera sobreesfuerzos no calculados en todos los niveles. Riesgo de vuelco o fractura basal de fundaciones. ¡EVACUAR!"
+        },
+        {
+            titulo: "EFECTO DE COLUMNA CORTA",
+            subtitulo: "Falla Frágil Inducida por Muro Parcial",
+            descripcion: "Una ventana alta deja una columna libre de apenas 60 cm. La rigidez forzada concentró esfuerzos de corte extremos, quebrando la columna a la mitad.",
+            esPeligro: true,
+            tipo: "columna_corta",
+            feedback: "¡ACIERTO TÁCTICO! La columna corta es una de las principales causas de colapso en edificaciones educativas y residenciales venezolanas. Peligro inminente."
+        }
+    ];
+
+    // --- ESCENARIOS DE SALA SITUACIONAL Y DESPACHO EDAN ---
+    const ESCENARIOS_DESPACHO = [
+        {
+            radio: "RADIO CENTRAL: 'Móvil 3 a Sala Situacional. Precipitaciones extraordinarias en cabecera de cuenca. Pluviógrafo marca 85 mm en 45 minutos. Nivel del río superó cota naranja con desprendimientos.'",
+            pregunta: "¿Cuál es el protocolo de despacho y fase de activación inmediata?",
+            opciones: [
+                "Ignorar el reporte hasta que se reciban llamadas de vecinos afectados.",
+                "Declarar ALERTA ROJA, activar el Sistema de Alerta Temprana (SAT), sirenas comunitarias y despachar brigada de evacuación preventiva.",
+                "Enviar un solo funcionario en moto a verificar visualmente el cauce.",
+                "Solicitar a los residentes que se queden en sus sótanos resguardados."
+            ],
+            correcta: 1,
+            feedback: "¡Excelente decisión! Con 85 mm/45min y superación de cota, el alud torrencial es inminente. La evacuación temprana salva vidas."
+        },
+        {
+            radio: "RADIO CENTRAL: 'Atención Sala Operativa: Camión cisterna volcado en autopista. En la parte posterior se observa rombo NFPA con Rojo 4, Azul 3, Amarillo 0. Hay escape de vapor blanquecino denso.'",
+            pregunta: "¿Qué significa el rombo NFPA reportado y qué acción inicial de perímetro ordenas?",
+            opciones: [
+                "Material completamente inerte; autorizar paso de vehículos por el hombrillo.",
+                "Extrema inflamabilidad (Rojo 4) y alto riesgo a la salud (Azul 3). Establecer perímetro de exclusión de al menos 800 metros a favor del viento y solicitar unidad HazMat.",
+                "Acercarse con manguera de agua directa sin equipo de respiración autónoma (ERA).",
+                "Esperar a que el chofer del camión informe qué líquido transporta."
+            ],
+            correcta: 1,
+            feedback: "¡Protocolo HazMat impecable! Un químico con Inflamabilidad 4 y Salud 3 es una bomba de tiempo química. Se requiere zona de exclusión amplia."
+        },
+        {
+            radio: "RADIO CENTRAL: 'Comando: Aeronave monomotor despegó de Maiquetía con destino a Canaima. Hace 65 minutos superó el tiempo estimado de notificación en punto de reporte obligatorio. Sin contacto radial.'",
+            pregunta: "¿Qué fase del protocolo SAR internacional debe declarar la sala de operaciones?",
+            opciones: [
+                "DESTREFA (Desastre Confirmado con envío de morgue móvil).",
+                "INCERFA (Fase de Incertidumbre), iniciando rastreo telefónico y verificación en pistas alternas.",
+                "Cerrar la bitácora operacional por falta de pruebas.",
+                "Declarar misión concluida con éxito."
+            ],
+            correcta: 1,
+            feedback: "¡Correcto! Es la fase de INCERFA (Incertidumbre). No hay confirmación de impacto pero sí un retraso que amerita indagación en la red aeroportuaria."
+        },
+        {
+            radio: "RADIO CENTRAL: 'Sismo sentido de magnitud 6.2 en el eje centro-norte costero. Un hospital municipal presenta desprendimiento de cielo raso y pánico en sala de emergencias.'",
+            pregunta: "¿Cuál es la primera instrucción para el equipo EDAN de Protección Civil?",
+            opciones: [
+                "Descartar riesgos vitales (fuga de gas, líneas eléctricas expuestas), ordenar corte preventivo de suministros y aplicar evaluación rápida del esqueleto estructural.",
+                "Indicar a los médicos que continúen cirugías sin revisar vigas ni columnas.",
+                "Publicar fotos en redes sociales personales antes de llegar al sitio.",
+                "Demoler el hospital inmediatamente sin peritaje."
+            ],
+            correcta: 0,
+            feedback: "¡Táctica perfecta! El Paso 1 de la evaluación post-sismo es asegurar el sitio: cortar gas y energía eléctrica para evitar incendios secundarios, luego evaluar el esqueleto."
+        }
+    ];
+
+    // --- ESTADO GENERAL DE LA APLICACIÓN ---
+    let appState = {
+        modo: '',
+        banco: [],
+        indice: 0,
+        puntos: 0,
+        racha: 0,
+        maxRacha: 0,
+        respondida: false,
+        tiempoInicio: 0,
+        timerId: null,
+        tiempoRestante: 30,
+        // Estructuras
+        escenariosEst: [],
+        indiceEst: 0,
+        aciertosEst: 0,
+        // Despacho
+        indiceDespacho: 0,
+        puntosDespacho: 0
+    };
+
+    // --- CARGA DE RÉCORD LOCAL ---
+    function cargarRecordLocal() {
+        const record = localStorage.getItem('pcad_record') || 0;
+        const rango = localStorage.getItem('pcad_rango') || 'Aspirante TSU';
+        const recEl = document.getElementById('menu-record-txt');
+        const ranEl = document.getElementById('menu-rango-txt');
+        if (recEl) recEl.innerText = `${record} pts`;
+        if (ranEl) ranEl.innerText = rango;
+    }
+    cargarRecordLocal();
+
+    // --- NAVEGACIÓN ENTRE PANTALLAS ---
+    function cambiarPantalla(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(id);
+        if (target) target.classList.add('active');
+
+        const btnChat = document.getElementById('btn-chat');
+        if (btnChat) btnChat.style.display = (id === 'resultado-screen') ? 'none' : 'flex';
+        detenerTimer();
+    }
+
+    function volverAlMenu() {
+        detenerTimer();
+        sonido.click();
+        cargarRecordLocal();
+        cambiarPantalla('menu-screen');
+    }
+
+    // --- MODAL MANUAL ---
+    function abrirManual() {
+        sonido.click();
+        document.getElementById('modal-manual').classList.add('active');
+    }
+    function cerrarManual() {
+        sonido.click();
+        document.getElementById('modal-manual').classList.remove('active');
+    }
+
+    // --- CHATBOT ASISTENTE TÁCTICO ---
+    function toggleChat() {
+        sonido.click();
+        const chat = document.getElementById('chat-container');
+        chat.style.display = (chat.style.display === 'flex') ? 'none' : 'flex';
+        if (chat.style.display === 'flex') {
+            document.getElementById('chat-input').focus();
+        }
+    }
+
+    function enviarChip(tema) {
+        document.getElementById('chat-input').value = tema;
+        enviarMensajeChat();
+    }
+
+    function pedirPistaTutor() {
+        const chat = document.getElementById('chat-container');
+        chat.style.display = 'flex';
+        if (appState.modo && appState.banco[appState.indice]) {
+            const p = appState.banco[appState.indice];
+            agregarMensajeChat(`Instructor, dame una pista sobre: ${p.materia}`, 'msg-user');
+            sonido.rogerBip();
+            setTimeout(() => {
+                agregarMensajeChat(`💡 PISTA TÁCTICA: ${p.pista}`, 'msg-bot');
+            }, 500);
+        } else {
+            agregarMensajeChat("¿En qué doctrina o procedimiento operacional necesitas apoyo?", 'msg-bot');
+        }
+    }
+
+    function enviarMensajeChat() {
+        const input = document.getElementById('chat-input');
+        const raw = input.value.trim();
+        if (!raw) return;
+
+        agregarMensajeChat(raw, 'msg-user');
+        input.value = "";
+        sonido.rogerBip();
+
+        const q = raw.toLowerCase();
+        let r = "No dispongo de una directriz exacta para ese término. Intenta con: 'SAR', 'grietas', 'esqueleto', 'NFPA', 'SIG', 'RADAR', 'LOPCYMAT' o 'sismo'.";
+
+        if (q.includes('sar') || q.includes('incerfa') || q.includes('alerfa') || q.includes('destrefa') || q.includes('rescate')) {
+            r = "🚨 DOCTRINA SAR: Recuerda las 3 fases reglamentarias:\n1. INCERFA = Incertidumbre (retraso no justificado).\n2. ALERFA = Alerta (aprensión fundada por la nave).\n3. DESTREFA = Desastre/Siniestro inminente confirmado. ¡Memorízalas en ese orden!";
+        } else if (q.includes('grieta') || q.includes('estructura') || q.includes('esqueleto') || q.includes('piel') || q.includes('columna')) {
+            r = "🏗️ REGLA DE ORO DE ESTRUCTURAS:\n• El Esqueleto (columnas, vigas, nodos): grietas a 45° o cabillas expuestas significan EVACUACIÓN INMEDIATA.\n• La Piel (paredes de tabiquería): grietas en 'X' en ladrillos absorben sismo sin colapso inminente si las columnas están sanas.";
+        } else if (q.includes('nfpa') || q.includes('rombo') || q.includes('quimico') || q.includes('material')) {
+            r = "🧪 ROMBO NFPA 704:\n• Azul: Salud humana (0 normal a 4 mortal).\n• Rojo: Inflamabilidad (fuego).\n• Amarillo: Inestabilidad / reactividad.\n• Blanco: Riesgos especiales (W: no usar agua).";
+        } else if (q.includes('sig') || q.includes('mde') || q.includes('radar') || q.includes('sensor')) {
+            r = "🛰️ TECNOLOGÍA EN GESTIÓN DE RIESGO:\n• Sensor RADAR: Mide crecidas de ríos sin contacto físico (el lodo no lo rompe).\n• MDE (Modelo Digital Elevaciones): Analiza pendientes y cauces de inundación.\n• Banda NIR: Refleja biomasa vegetal sana.";
+        } else if (q.includes('lopcymat') || q.includes('incidente') || q.includes('accidente')) {
+            r = "⚖️ LOPCYMAT:\nUn 'incidente' es un suceso imprevisto que no produjo lesiones ni daños materiales pero sirve de advertencia preventiva obligatoria.";
+        } else if (q.includes('sismo') || q.includes('terremoto')) {
+            r = "⚠️ POST-SISMO PASO 1:\nAntes de inspeccionar paredes, descarta riesgos vitales: corta de inmediato electricidad y gas doméstico para impedir explosiones secundarias.";
+        }
+
+        setTimeout(() => {
+            agregarMensajeChat(r, 'msg-bot');
+        }, 450);
+    }
+
+    function agregarMensajeChat(texto, clase) {
+        const cont = document.getElementById('chat-messages');
+        const div = document.createElement('div');
+        div.className = `msg ${clase}`;
+        div.innerText = texto;
+        cont.appendChild(div);
+        cont.scrollTop = cont.scrollHeight;
+    }
+
+    // --- MÓDULO TEÓRICO (DIFÍCIL / EXPERTO) ---
+    function iniciarJuegoTeorico(nivel) {
+        sonido.click();
+        appState.modo = nivel;
+        const base = (nivel === 'dificil') ? PREGUNTAS_DIFICIL : PREGUNTAS_EXPERTO;
+        appState.banco = [...base].sort(() => 0.5 - Math.random());
+        appState.indice = 0;
+        appState.puntos = 0;
+        appState.racha = 0;
+        appState.maxRacha = 0;
+        appState.tiempoInicio = Date.now();
+
+        cambiarPantalla('juego-screen');
+        cargarPregunta();
+    }
+
+    function cargarPregunta() {
+        appState.respondida = false;
+        const p = appState.banco[appState.indice];
+
+        document.getElementById('materia-txt').innerText = p.materia;
+        document.getElementById('categoria-badge').innerText = `MÓDULO: ${appState.modo.toUpperCase()} • ${p.materia.toUpperCase()}`;
+        document.getElementById('progreso-txt').innerText = `${appState.indice + 1}/${appState.banco.length}`;
+        document.getElementById('puntos-txt').innerText = appState.puntos;
+        document.getElementById('racha-txt').innerText = appState.racha;
+        document.getElementById('pregunta-container-txt').innerText = p.pregunta;
+
+        const cont = document.getElementById('opciones-container');
+        cont.innerHTML = '';
+
+        const letras = ['A', 'B', 'C', 'D'];
+        p.opciones.forEach((opc, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'opcion';
+            btn.innerHTML = `<div class="letra">${letras[idx]}</div><div>${opc}</div>`;
+            btn.onclick = () => seleccionarOpcion(idx, btn);
+            cont.appendChild(btn);
+        });
+
+        const feedback = document.getElementById('feedback-container');
+        feedback.className = 'feedback-box';
+        feedback.innerHTML = '';
+
+        document.getElementById('btn-siguiente').disabled = true;
+        iniciarTimerPregunta();
+    }
+
+    function iniciarTimerPregunta() {
+        detenerTimer();
+        appState.tiempoRestante = 30;
+        const wrap = document.getElementById('timer-bar-wrap');
+        const bar = document.getElementById('timer-bar');
+        wrap.style.display = 'block';
+        bar.style.width = '100%';
+        bar.style.backgroundColor = 'var(--verde)';
+
+        appState.timerId = setInterval(() => {
+            appState.tiempoRestante -= 0.1;
+            const pct = Math.max(0, (appState.tiempoRestante / 30) * 100);
+            bar.style.width = `${pct}%`;
+
+            if (pct < 30) {
+                bar.style.backgroundColor = 'var(--rojo)';
+            } else if (pct < 60) {
+                bar.style.backgroundColor = 'var(--amarillo)';
+            }
+
+            if (appState.tiempoRestante <= 0) {
+                detenerTimer();
+                tiempoAgotado();
+            }
+        }, 100);
+    }
+
+    function detenerTimer() {
+        if (appState.timerId) {
+            clearInterval(appState.timerId);
+            appState.timerId = null;
+        }
+        const wrap = document.getElementById('timer-bar-wrap');
+        if (wrap) wrap.style.display = 'none';
+    }
+
+    function tiempoAgotado() {
+        if (appState.respondida) return;
+        sonido.error();
+        const p = appState.banco[appState.indice];
+        const opcionesDOM = document.getElementById('opciones-container').children;
+        bloquearOpciones();
+
+        appState.racha = 0;
+        document.getElementById('racha-txt').innerText = '0';
+
+        opcionesDOM[p.correcta].classList.add('correcta');
+        const feedback = document.getElementById('feedback-container');
+        feedback.className = 'feedback-box show fail';
+        feedback.innerHTML = `<strong>⏰ ¡TIEMPO AGOTADO!</strong><div class="justificacion">${p.justificacion}</div>`;
+        document.getElementById('btn-siguiente').disabled = false;
+    }
+
+    function bloquearOpciones() {
+        appState.respondida = true;
+        detenerTimer();
+        const opciones = document.querySelectorAll('.opcion');
+        opciones.forEach(o => o.classList.add('bloqueada'));
+    }
+
+    function seleccionarOpcion(idx, btnElem) {
+        if (appState.respondida) return;
+        bloquearOpciones();
+
+        const p = appState.banco[appState.indice];
+        const opcionesDOM = document.getElementById('opciones-container').children;
+        const feedback = document.getElementById('feedback-container');
+
+        if (idx === p.correcta) {
+            sonido.acierto();
+            btnElem.classList.add('correcta');
+
+            appState.racha++;
+            if (appState.racha > appState.maxRacha) appState.maxRacha = appState.racha;
+
+            const bonusVelocidad = Math.round(appState.tiempoRestante * 0.5);
+            const multiRacha = appState.racha >= 3 ? 1.5 : 1;
+            const ptsGanados = Math.round((10 + bonusVelocidad) * multiRacha);
+            appState.puntos += ptsGanados;
+
+            feedback.className = 'feedback-box show ok';
+            feedback.innerHTML = `<strong>✅ ¡RESPUESTA TÁCTICA ACERTADA! (+${ptsGanados} pts)</strong><div class="justificacion">${p.justificacion}</div>`;
+        } else {
+            sonido.error();
+            btnElem.classList.add('incorrecta');
+            opcionesDOM[p.correcta].classList.add('correcta');
+
+            appState.racha = 0;
+            feedback.className = 'feedback-box show fail';
+            feedback.innerHTML = `<strong>❌ RESPUESTA NO PROCEDENTE</strong><div class="justificacion">Opción correcta: Letra ${['A','B','C','D'][p.correcta]}.<br>${p.justificacion}</div>`;
+        }
+
+        document.getElementById('puntos-txt').innerText = appState.puntos;
+        document.getElementById('racha-txt').innerText = appState.racha;
+        document.getElementById('btn-siguiente').disabled = false;
+    }
+
+    function siguientePregunta() {
+        sonido.click();
+        appState.indice++;
+        if (appState.indice < appState.banco.length) {
+            cargarPregunta();
+        } else {
+            mostrarResultadosFinales('teorico');
+        }
+    }
+
+    // --- MÓDULO ESTRUCTURAS: MOTOR GRÁFICO CÓMIC POP-ART EN SVG ---
+    function iniciarJuegoEstructuras() {
+        sonido.click();
+        appState.modo = 'estructuras';
+        appState.escenariosEst = [...ESCENARIOS_ESTRUCTURA].sort(() => 0.5 - Math.random());
+        appState.indiceEst = 0;
+        appState.aciertosEst = 0;
+        appState.tiempoInicio = Date.now();
+
+        cambiarPantalla('estructuras-screen');
+        cargarEscenarioEstructural();
+    }
+
+    function generarSvgComic(tipo) {
+        // Viñetas estilo cómic con sombras duras, tramas, explosiones de texto y onomatopeyas
+        switch(tipo) {
+            case 'corte_columna':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="comicDots" width="12" height="12" patternUnits="userSpaceOnUse">
+                            <circle cx="3" cy="3" r="1.5" fill="#FF8533" opacity="0.3"/>
+                        </pattern>
+                    </defs>
+                    <!-- Fondo de viñeta -->
+                    <rect x="10" y="10" width="380" height="220" fill="#0E2344" stroke="#000" stroke-width="4" rx="8"/>
+                    <rect x="10" y="10" width="380" height="220" fill="url(#comicDots)"/>
+                    
+                    <!-- Líneas de velocidad / impacto estilo manga/cómic -->
+                    <line x1="20" y1="20" x2="160" y2="100" stroke="#FFD600" stroke-width="2" opacity="0.6"/>
+                    <line x1="380" y1="20" x2="240" y2="100" stroke="#FFD600" stroke-width="2" opacity="0.6"/>
+                    <line x1="20" y1="220" x2="150" y2="140" stroke="#FFD600" stroke-width="2" opacity="0.6"/>
+                    <line x1="380" y1="220" x2="250" y2="140" stroke="#FFD600" stroke-width="2" opacity="0.6"/>
+
+                    <!-- Sombra dura columna -->
+                    <rect x="165" y="30" width="90" height="180" fill="#000" rx="4"/>
+                    <!-- Columna de concreto -->
+                    <rect x="155" y="24" width="90" height="180" fill="#64748B" stroke="#000" stroke-width="5" rx="4"/>
+                    <!-- Trama de sombras cruzadas estilo cómic -->
+                    <path d="M165,35 L235,35 M165,45 L235,45 M165,55 L235,55" stroke="#334155" stroke-width="3"/>
+                    
+                    <!-- Gran grieta diagonal de cortante a 45 grados -->
+                    <path d="M152,145 L175,125 L190,135 L220,95 L248,75" stroke="#000" stroke-width="12" stroke-linecap="round" fill="none"/>
+                    <path d="M152,145 L175,125 L190,135 L220,95 L248,75" stroke="#FF2E55" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    
+                    <!-- Fragmentos de concreto volando (Spalling) -->
+                    <polygon points="170,110 185,115 178,125" fill="#334155" stroke="#000" stroke-width="2"/>
+                    <polygon points="215,80 230,85 220,95" fill="#334155" stroke="#000" stroke-width="2"/>
+                    <polygon points="235,110 245,112 240,122" fill="#334155" stroke="#000" stroke-width="2"/>
+
+                    <!-- Explosión cómic con Onomatopeya ¡CRACK! -->
+                    <g transform="translate(250, 45) rotate(12)">
+                        <polygon points="0,20 18,5 25,25 45,10 40,30 65,25 50,45 70,55 45,65 55,85 30,75 25,95 10,75 -10,85 0,60 -20,50 0,40 -15,20" fill="#FFD600" stroke="#000" stroke-width="4"/>
+                        <text x="25" y="52" fill="#FF2E55" font-family="Bangers" font-size="28" text-anchor="middle" stroke="#000" stroke-width="2" letter-spacing="1">¡CRACK!</text>
+                    </g>
+
+                    <!-- Cartel de peligro -->
+                    <rect x="25" y="170" width="115" height="36" fill="#FF2E55" stroke="#000" stroke-width="3" rx="6" transform="rotate(-4 25 170)"/>
+                    <text x="82" y="194" fill="#FFF" font-family="Bangers" font-size="16" text-anchor="middle" letter-spacing="1">CIZALLE A 45°</text>
+                </svg>`;
+
+            case 'pared_x':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Fondo de viñeta -->
+                    <rect x="10" y="10" width="380" height="220" fill="#0E2344" stroke="#000" stroke-width="4" rx="8"/>
+                    
+                    <!-- Pórtico de concreto verde protegido (El Esqueleto) -->
+                    <!-- Sombra -->
+                    <rect x="45" y="25" width="310" height="190" fill="#000" rx="4"/>
+                    <!-- Vigas y Columnas -->
+                    <rect x="40" y="20" width="310" height="190" fill="none" stroke="#000" stroke-width="6"/>
+                    <rect x="40" y="20" width="40" height="190" fill="#00E676" stroke="#000" stroke-width="4"/>
+                    <rect x="310" y="20" width="40" height="190" fill="#00E676" stroke="#000" stroke-width="4"/>
+                    <rect x="40" y="20" width="310" height="35" fill="#00E676" stroke="#000" stroke-width="4"/>
+                    <rect x="40" y="175" width="310" height="35" fill="#00E676" stroke="#000" stroke-width="4"/>
+
+                    <!-- Pared de bloques de arcilla (La Piel) -->
+                    <rect x="80" y="55" width="230" height="120" fill="#D97706" stroke="#000" stroke-width="4"/>
+                    <!-- Líneas de mortero de bloques -->
+                    <line x1="80" y1="85" x2="310" y2="85" stroke="#78350F" stroke-width="3"/>
+                    <line x1="80" y1="115" x2="310" y2="115" stroke="#78350F" stroke-width="3"/>
+                    <line x1="80" y1="145" x2="310" y2="145" stroke="#78350F" stroke-width="3"/>
+                    
+                    <!-- Grietas en X en la tabiquería -->
+                    <line x1="90" y1="65" x2="300" y2="165" stroke="#000" stroke-width="8"/>
+                    <line x1="90" y1="65" x2="300" y2="165" stroke="#FEF08A" stroke-width="4" stroke-dasharray="10 5"/>
+                    <line x1="300" y1="65" x2="90" y2="165" stroke="#000" stroke-width="8"/>
+                    <line x1="300" y1="65" x2="90" y2="165" stroke="#FEF08A" stroke-width="4" stroke-dasharray="10 5"/>
+
+                    <!-- Bocadillo de cómic SAFE -->
+                    <g transform="translate(145, 80)">
+                        <rect x="0" y="0" width="110" height="42" fill="#FFD600" stroke="#000" stroke-width="3" rx="8"/>
+                        <text x="55" y="28" fill="#000" font-family="Bangers" font-size="20" text-anchor="middle" letter-spacing="1">¡DISIPACIÓN EN X!</text>
+                    </g>
+
+                    <rect x="110" y="185" width="180" height="28" fill="#00E676" stroke="#000" stroke-width="3" rx="6"/>
+                    <text x="200" y="204" fill="#000" font-family="Bangers" font-size="16" text-anchor="middle" letter-spacing="1">ESQUELETO INTACTO (LA PIEL DAÑADA)</text>
+                </svg>`;
+
+            case 'prueba_moneda':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="380" height="220" fill="#1E293B" stroke="#000" stroke-width="4" rx="8"/>
+                    
+                    <!-- Lupa estilo cómic de detective -->
+                    <g transform="translate(60, 25)">
+                        <!-- Mango lupa -->
+                        <line x1="210" y1="150" x2="280" y2="195" stroke="#000" stroke-width="22" stroke-linecap="round"/>
+                        <line x1="210" y1="150" x2="280" y2="195" stroke="#F97316" stroke-width="14" stroke-linecap="round"/>
+                        <!-- Cristal de la lupa -->
+                        <circle cx="140" cy="95" r="75" fill="#38BDF8" opacity="0.3"/>
+                        <circle cx="140" cy="95" r="75" stroke="#000" stroke-width="8"/>
+                        <!-- Destello de cristal -->
+                        <path d="M90,65 Q115,40 145,45" stroke="#FFF" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    </g>
+
+                    <!-- Microfisura superficial en pared -->
+                    <path d="M185,45 Q195,110 188,185" stroke="#000" stroke-width="3"/>
+                    
+                    <!-- Moneda reluciente estilo cómic en primer plano -->
+                    <g transform="translate(170, 75)">
+                        <!-- Sombra moneda -->
+                        <circle cx="36" cy="36" r="32" fill="#000"/>
+                        <!-- Borde moneda -->
+                        <circle cx="32" cy="32" r="32" fill="#FFD600" stroke="#000" stroke-width="4"/>
+                        <circle cx="32" cy="32" r="26" fill="#F59E0B" stroke="#000" stroke-width="2"/>
+                        <!-- Texto moneda -->
+                        <text x="32" y="38" fill="#000" font-family="Bangers" font-size="18" text-anchor="middle">1 BS</text>
+                        <!-- Brillos cómicos -->
+                        <polygon points="12,14 15,6 18,14 26,17 18,20 15,28 12,20 4,17" fill="#FFF" stroke="#000" stroke-width="1.5"/>
+                    </g>
+
+                    <!-- Rótulo de veredicto -->
+                    <g transform="translate(45, 175) rotate(-2)">
+                        <rect x="0" y="0" width="220" height="38" fill="#FFD600" stroke="#000" stroke-width="3" rx="8"/>
+                        <text x="110" y="25" fill="#000" font-family="Bangers" font-size="18" text-anchor="middle" letter-spacing="1">¡NO ENTRA! ESPESOR &lt; 0.5 MM</text>
+                    </g>
+                </svg>`;
+
+            case 'acero_expuesto':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="380" height="220" fill="#09172C" stroke="#000" stroke-width="4" rx="8"/>
+
+                    <!-- Nodo viga y columna -->
+                    <rect x="40" y="35" width="320" height="45" fill="#64748B" stroke="#000" stroke-width="5"/>
+                    <rect x="160" y="35" width="80" height="175" fill="#64748B" stroke="#000" stroke-width="5"/>
+
+                    <!-- Zona de hormigón reventado (Spalling negro con picos) -->
+                    <polygon points="150,45 250,45 255,120 220,135 155,125 145,85" fill="#050D1A" stroke="#000" stroke-width="4"/>
+                    
+                    <!-- Rayos de peligro cómic -->
+                    <path d="M120,60 L140,80 L130,95 L150,115" stroke="#FFD600" stroke-width="3" fill="none"/>
+                    <path d="M280,60 L260,80 L270,95 L250,115" stroke="#FFD600" stroke-width="3" fill="none"/>
+
+                    <!-- Cabillas expuestas dobladas al rojo vivo en S -->
+                    <path d="M175,45 Q205,80 180,125" stroke="#000" stroke-width="12" fill="none" stroke-linecap="round"/>
+                    <path d="M175,45 Q205,80 180,125" stroke="#EF4444" stroke-width="7" fill="none" stroke-linecap="round"/>
+                    
+                    <path d="M220,45 Q195,85 225,125" stroke="#000" stroke-width="12" fill="none" stroke-linecap="round"/>
+                    <path d="M220,45 Q195,85 225,125" stroke="#EF4444" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+                    <!-- Estribo roto colgando -->
+                    <path d="M185,85 L215,82" stroke="#FFD600" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 4"/>
+
+                    <!-- Onomatopeya ¡SNAP! -->
+                    <g transform="translate(250, 80) rotate(-10)">
+                        <polygon points="0,15 20,5 22,25 45,15 35,35 60,35 45,55 65,70 40,70 45,90 25,75 15,90 10,70 -10,75 0,55 -20,45 -5,35 -15,15" fill="#FF2E55" stroke="#000" stroke-width="3"/>
+                        <text x="22" y="55" fill="#FFD600" font-family="Bangers" font-size="26" text-anchor="middle" stroke="#000" stroke-width="2">¡SNAP!</text>
+                    </g>
+
+                    <rect x="80" y="180" width="240" height="34" fill="#FF2E55" stroke="#000" stroke-width="3" rx="8"/>
+                    <text x="200" y="203" fill="#FFF" font-family="Bangers" font-size="18" text-anchor="middle" letter-spacing="1">PANDEO DE CABILLAS: ¡EVACUAR YA!</text>
+                </svg>`;
+
+            case 'asentamiento':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="380" height="220" fill="#0E2344" stroke="#000" stroke-width="4" rx="8"/>
+
+                    <!-- Terreno fracturado -->
+                    <line x1="20" y1="180" x2="380" y2="180" stroke="#000" stroke-width="8"/>
+                    <line x1="20" y1="180" x2="380" y2="180" stroke="#22C55E" stroke-width="5"/>
+                    <path d="M230,180 L255,215 L285,210" stroke="#000" stroke-width="6" fill="none"/>
+                    <path d="M230,180 L255,215 L285,210" stroke="#FF6B00" stroke-width="3" fill="none"/>
+
+                    <!-- Edificio inclinado en perspectiva cómic -->
+                    <g transform="rotate(9 180 180)">
+                        <!-- Sombra edificio -->
+                        <rect x="125" y="35" width="130" height="145" fill="#000" rx="4"/>
+                        <!-- Fachada -->
+                        <rect x="120" y="30" width="130" height="145" fill="#64748B" stroke="#000" stroke-width="5" rx="4"/>
+                        <!-- Ventanas con cristales temblando -->
+                        <rect x="135" y="45" width="30" height="30" fill="#38BDF8" stroke="#000" stroke-width="3"/>
+                        <rect x="185" y="45" width="30" height="30" fill="#38BDF8" stroke="#000" stroke-width="3"/>
+                        <rect x="135" y="90" width="30" height="30" fill="#38BDF8" stroke="#000" stroke-width="3"/>
+                        <rect x="185" y="90" width="30" height="30" fill="#38BDF8" stroke="#000" stroke-width="3"/>
+                    </g>
+
+                    <!-- Ondas sísmicas de temblor -->
+                    <path d="M40,140 Q60,120 40,100" stroke="#FFD600" stroke-width="4" fill="none"/>
+                    <path d="M55,150 Q75,120 55,90" stroke="#FFD600" stroke-width="4" fill="none"/>
+                    
+                    <!-- Bocadillo de sismo ¡RUMBLE! -->
+                    <g transform="translate(250, 40) rotate(6)">
+                        <polygon points="0,20 18,5 25,25 45,10 40,30 65,25 50,45 70,55 45,65 55,85 30,75 25,95 10,75 -10,85 0,60 -20,50 0,40 -15,20" fill="#FF6B00" stroke="#000" stroke-width="4"/>
+                        <text x="25" y="55" fill="#FFD600" font-family="Bangers" font-size="23" text-anchor="middle" stroke="#000" stroke-width="2">¡RUMBLE!</text>
+                    </g>
+
+                    <rect x="60" y="190" width="280" height="32" fill="#FF2E55" stroke="#000" stroke-width="3" rx="6"/>
+                    <text x="200" y="212" fill="#FFF" font-family="Bangers" font-size="16" text-anchor="middle" letter-spacing="1">HUNDIMIENTO DIFERENCIAL (RIESGO DE VUELCO)</text>
+                </svg>`;
+
+            case 'columna_corta':
+                return `
+                <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="380" height="220" fill="#0E2344" stroke="#000" stroke-width="4" rx="8"/>
+
+                    <!-- Columna completa -->
+                    <rect x="80" y="25" width="60" height="180" fill="#64748B" stroke="#000" stroke-width="5" rx="4"/>
+
+                    <!-- Muro restrictivo (El causante del efecto columna corta) -->
+                    <rect x="140" y="95" width="200" height="110" fill="#D97706" stroke="#000" stroke-width="5"/>
+                    <text x="240" y="145" fill="#000" font-family="Bangers" font-size="18" text-anchor="middle">MURO DE MAMPOSTERÍA</text>
+                    <text x="240" y="165" fill="#FFF" font-family="Montserrat" font-size="11" font-weight="bold" text-anchor="middle">RESTRINGE LA DEFORMACIÓN</text>
+
+                    <!-- Zona libre de columna corta con fractura horizontal cortante -->
+                    <rect x="80" y="25" width="60" height="70" fill="#FEF08A" stroke="#000" stroke-width="3"/>
+                    <line x1="75" y1="65" x2="145" y2="45" stroke="#000" stroke-width="10"/>
+                    <line x1="75" y1="65" x2="145" y2="45" stroke="#FF2E55" stroke-width="5"/>
+
+                    <!-- Flecha de fuerza cortante destructiva -->
+                    <path d="M30,55 L65,55" stroke="#FF2E55" stroke-width="8" stroke-linecap="round"/>
+                    <polygon points="65,45 80,55 65,65" fill="#FF2E55" stroke="#000" stroke-width="2"/>
+
+                    <!-- Onomatopeya cómic ¡CRUNCH! -->
+                    <g transform="translate(180, 25)">
+                        <polygon points="0,15 20,5 22,25 45,15 35,35 60,35 45,55 65,70 40,70 45,90 25,75 15,90 10,70 -10,75 0,55 -20,45 -5,35 -15,15" fill="#FFD600" stroke="#000" stroke-width="3"/>
+                        <text x="22" y="55" fill="#FF2E55" font-family="Bangers" font-size="24" text-anchor="middle" stroke="#000" stroke-width="1.5">¡CIZALLA!</text>
+                    </g>
+
+                    <rect x="40" y="185" width="320" height="32" fill="#FF2E55" stroke="#000" stroke-width="3" rx="6"/>
+                    <text x="200" y="207" fill="#FFF" font-family="Bangers" font-size="16" text-anchor="middle" letter-spacing="1">FALLA POR COLUMNA CORTA: ¡COLAPSO FRÁGIL!</text>
+                </svg>`;
+            default:
+                return '';
+        }
+    }
+
+    function cargarEscenarioEstructural() {
+        const esc = appState.escenariosEst[appState.indiceEst];
+        document.getElementById('estructuras-progreso').innerText = `${appState.indiceEst + 1}/${appState.escenariosEst.length}`;
+        document.getElementById('est-aciertos-txt').innerText = `${appState.aciertosEst}`;
+        document.getElementById('comic-vignette-tag').innerText = `PANEL #${appState.indiceEst + 1} • ${esc.subtitulo.toUpperCase()}`;
+        document.getElementById('dibujo-svg-container').innerHTML = generarSvgComic(esc.tipo);
+        document.getElementById('est-titulo').innerText = esc.titulo;
+        document.getElementById('est-desc').innerText = esc.descripcion;
+
+        const fb = document.getElementById('estructuras-feedback');
+        fb.className = 'feedback-box';
+        fb.innerHTML = '';
+
+        document.getElementById('estructuras-botones').style.display = 'flex';
+        document.getElementById('estructuras-next-row').style.display = 'none';
+    }
+
+    function evaluarEstructura(decisionEvacuar) {
+        const esc = appState.escenariosEst[appState.indiceEst];
+        const fb = document.getElementById('estructuras-feedback');
+        const acerto = (decisionEvacuar === esc.esPeligro);
+
+        if (acerto) {
+            sonido.acierto();
+            appState.aciertosEst++;
+            fb.className = 'feedback-box show ok';
+            fb.innerHTML = `<strong>✅ ¡EVALUACIÓN TÁCTICA ACERTADA!</strong><div class="justificacion">${esc.feedback}</div>`;
+        } else {
+            sonido.error();
+            fb.className = 'feedback-box show fail';
+            fb.innerHTML = `<strong>❌ ERROR DE APRECIACIÓN ESTRUCTURAL</strong><div class="justificacion">${esc.feedback}</div>`;
+        }
+
+        document.getElementById('est-aciertos-txt').innerText = `${appState.aciertosEst}`;
+        document.getElementById('estructuras-botones').style.display = 'none';
+        document.getElementById('estructuras-next-row').style.display = 'flex';
+    }
+
+    function siguienteEstructura() {
+        sonido.click();
+        appState.indiceEst++;
+        if (appState.indiceEst < appState.escenariosEst.length) {
+            cargarEscenarioEstructural();
+        } else {
+            mostrarResultadosFinales('estructuras');
+        }
+    }
+
+    // --- MÓDULO SALA SITUACIONAL Y DESPACHO EDAN ---
+    function iniciarDespachoEDAN() {
+        sonido.click();
+        appState.modo = 'despacho';
+        appState.indiceDespacho = 0;
+        appState.puntosDespacho = 0;
+        appState.tiempoInicio = Date.now();
+
+        cambiarPantalla('despacho-screen');
+        cargarEscenarioDespacho();
+    }
+
+    function cargarEscenarioDespacho() {
+        const esc = ESCENARIOS_DESPACHO[appState.indiceDespacho];
+        document.getElementById('despacho-progreso').innerText = `${appState.indiceDespacho + 1}/${ESCENARIOS_DESPACHO.length}`;
+        document.getElementById('despacho-puntos').innerText = `${appState.puntosDespacho} pts`;
+        document.getElementById('despacho-radio-txt').innerText = esc.radio;
+        document.getElementById('despacho-mision-txt').innerText = esc.pregunta;
+
+        const cont = document.getElementById('despacho-opciones');
+        cont.innerHTML = '';
+
+        const letras = ['A', 'B', 'C', 'D'];
+        esc.opciones.forEach((opc, idx) => {
+            const btn = document.createElement('div');
+            btn.className = 'opcion';
+            btn.innerHTML = `<div class="letra">${letras[idx]}</div><div>${opc}</div>`;
+            btn.onclick = () => seleccionarDespacho(idx, btn);
+            cont.appendChild(btn);
+        });
+
+        const fb = document.getElementById('despacho-feedback');
+        fb.className = 'feedback-box';
+        fb.innerHTML = '';
+        document.getElementById('btn-siguiente-despacho').disabled = true;
+    }
+
+    function seleccionarDespacho(idx, btnElem) {
+        const esc = ESCENARIOS_DESPACHO[appState.indiceDespacho];
+        const opcionesDOM = document.getElementById('despacho-opciones').children;
+        const fb = document.getElementById('despacho-feedback');
+
+        Array.from(opcionesDOM).forEach(o => o.classList.add('bloqueada'));
+
+        if (idx === esc.correcta) {
+            sonido.acierto();
+            btnElem.classList.add('correcta');
+            appState.puntosDespacho += 25;
+            fb.className = 'feedback-box show ok';
+            fb.innerHTML = `<strong>🚨 ¡DESPACHO IMPECABLE! (+25 pts)</strong><div class="justificacion">${esc.feedback}</div>`;
+        } else {
+            sonido.error();
+            btnElem.classList.add('incorrecta');
+            opcionesDOM[esc.correcta].classList.add('correcta');
+            fb.className = 'feedback-box show fail';
+            fb.innerHTML = `<strong>⚠️ DESPACHO DEFICIENTE</strong><div class="justificacion">${esc.feedback}</div>`;
+        }
+
+        document.getElementById('despacho-puntos').innerText = `${appState.puntosDespacho} pts`;
+        document.getElementById('btn-siguiente-despacho').disabled = false;
+    }
+
+    function siguienteDespacho() {
+        sonido.click();
+        appState.indiceDespacho++;
+        if (appState.indiceDespacho < ESCENARIOS_DESPACHO.length) {
+            cargarEscenarioDespacho();
+        } else {
+            mostrarResultadosFinales('despacho');
+        }
+    }
+
+    // --- PANTALLA FINAL Y EVALUACIÓN SEGÚN ESCALA UNES (0 A 20 PTS) ---
+    function mostrarResultadosFinales(tipo) {
+        sonido.fanfarria();
+        detenerTimer();
+        cambiarPantalla('resultado-screen');
+
+        let nota20 = 0;
+        let efectividad = 0;
+        let totalPuntos = 0;
+
+        if (tipo === 'teorico') {
+            nota20 = Math.min(20, Math.round((appState.puntos / (appState.banco.length * 15)) * 20));
+            if (appState.puntos > 80 && nota20 < 16) nota20 = 16;
+            efectividad = Math.min(100, Math.round((appState.puntos / (appState.banco.length * 12)) * 100));
+            totalPuntos = appState.puntos;
+        } else if (tipo === 'estructuras') {
+            const total = appState.escenariosEst.length;
+            nota20 = Math.round((appState.aciertosEst / total) * 20);
+            efectividad = Math.round((appState.aciertosEst / total) * 100);
+            totalPuntos = appState.aciertosEst * 20;
+        } else if (tipo === 'despacho') {
+            const total = ESCENARIOS_DESPACHO.length;
+            nota20 = Math.round((appState.puntosDespacho / (total * 25)) * 20);
+            efectividad = Math.round((appState.puntosDespacho / (total * 25)) * 100);
+            totalPuntos = appState.puntosDespacho;
+        }
+
+        const tiempoTotal = Math.round((Date.now() - appState.tiempoInicio) / 1000);
+
+        let califTexto = "INSUFICIENTE";
+        let mensaje = "Necesitas repasar a fondo los manuales operacionales de Protección Civil y los protocolos SAR.";
+        let rango = "Aspirante";
+        let emblema = "📋";
+
+        if (nota20 >= 19) {
+            califTexto = "EXCELENTE (MENCIÓN HONORÍFICA)";
+            mensaje = "¡Rendimiento táctico insuperable! Demuestras solvencia operativa integral como Comisionado PCAD.";
+            rango = "Comisionado de Operaciones";
+            emblema = "⭐";
+        } else if (nota20 >= 16) {
+            califTexto = "SOBRESALIENTE";
+            mensaje = "Excelente dominio técnico de la doctrina UNES. Apto para liderar comisiones en terreno.";
+            rango = "Inspector PCAD";
+            emblema = "🎖️";
+        } else if (nota20 >= 13) {
+            califTexto = "BUENO (APROBADO)";
+            mensaje = "Cumples con el perfil de TSU en Operaciones de Protección Civil. Refuerza temas específicos.";
+            rango = "Oficial de Operaciones";
+            emblema = "🛡️";
+        } else if (nota20 >= 10) {
+            califTexto = "REGULAR (APROBADO MÍNIMO)";
+            mensaje = "Aprobado con observaciones. Se sugiere estudiar el glosario táctico y el manual de estructuras.";
+            rango = "Discente TSU";
+            emblema = "⚠️";
+        }
+
+        document.getElementById('res-icono').innerText = emblema;
+        document.getElementById('res-nota').innerText = nota20;
+        document.getElementById('res-calificacion').innerText = califTexto;
+        document.getElementById('res-mensaje').innerText = mensaje;
+        document.getElementById('res-puntos').innerText = totalPuntos;
+        document.getElementById('res-efectividad').innerText = `${efectividad}%`;
+        document.getElementById('res-tiempo').innerText = `${tiempoTotal}s`;
+
+        const recordPrevio = parseInt(localStorage.getItem('pcad_record') || '0', 10);
+        if (totalPuntos > recordPrevio) {
+            localStorage.setItem('pcad_record', totalPuntos);
+            localStorage.setItem('pcad_rango', rango);
+        }
+    }
+
+    function reiniciarModuloActual() {
+        sonido.click();
+        if (appState.modo === 'dificil' || appState.modo === 'experto') {
+            iniciarJuegoTeorico(appState.modo);
+        } else if (appState.modo === 'estructuras') {
+            iniciarJuegoEstructuras();
+        } else if (appState.modo === 'despacho') {
+            iniciarDespachoEDAN();
+        } else {
+            volverAlMenu();
+        }
+    }
+
+    // --- ACCESIBILIDAD POR TECLADO ---
+    window.addEventListener('keydown', (e) => {
+        if (e.target && e.target.id === 'chat-input') return;
+
+        const key = e.key.toUpperCase();
+        const opciones = document.querySelectorAll('.screen.active .opcion:not(.bloqueada)');
+
+        if (['1', '2', '3', '4', 'A', 'B', 'C', 'D'].includes(key)) {
+            const indexMap = { '1': 0, 'A': 0, '2': 1, 'B': 1, '3': 2, 'C': 2, '4': 3, 'D': 3 };
+            const targetIdx = indexMap[key];
+            if (opciones[targetIdx]) {
+                opciones[targetIdx].click();
+            }
+        } else if (e.key === 'Enter' || e.key === ' ') {
+            const btnSiguiente = document.querySelector('.screen.active .btn-primary:not(:disabled)');
+            if (btnSiguiente) {
+                e.preventDefault();
+                btnSiguiente.click();
+            }
+        } else if (e.key === 'Escape') {
+            cerrarManual();
+            const chat = document.getElementById('chat-container');
+            if (chat) chat.style.display = 'none';
+        }
+    });
+
+    // ===== CAPA CÓMIC DINÁMICA: efectos reutilizables =====
+    (function(){
+        const BIEN=['¡POW!','¡BAM!','¡ZAP!','¡BOOM!','¡WOW!','¡CRACK!','¡EXCELENTE!'];
+        const MAL=['¡OUCH!','¡CRASH!','¡UPS!','¡NOOO!','¡SPLAT!'];
+        const COLS=['#FF6B00','#FFD600','#00E676','#2F80ED','#fff'];
+        const rnd=a=>a[Math.floor(Math.random()*a.length)];
+        function onoma(txt,mal,x,y){
+            const e=document.createElement('div');e.className='onoma'+(mal?' mal':'');e.textContent=txt;
+            e.style.left=(x??50)+'vw';e.style.top=(y??38)+'vh';e.style.setProperty('--rot',(Math.random()*20-10)+'deg');
+            document.body.appendChild(e);setTimeout(()=>e.remove(),1150);
+        }
+        function confeti(n){
+            for(let i=0;i<n;i++){const c=document.createElement('div');c.className='confeti';
+                c.style.left='50vw';c.style.top='40vh';c.style.background=rnd(COLS);
+                c.style.setProperty('--x',(Math.random()*90-45)+'vw');c.style.setProperty('--y',(Math.random()*70-20)+'vh');
+                c.style.setProperty('--r',(Math.random()*900-450)+'deg');c.style.setProperty('--d',(1+Math.random()*.9)+'s');
+                document.body.appendChild(c);setTimeout(()=>c.remove(),2000);}
+        }
+        function flash(color){const f=document.createElement('div');f.className='flash';f.style.background=color;document.body.appendChild(f);setTimeout(()=>f.remove(),400);}
+        function temblor(){const a=document.getElementById('app');a.classList.remove('shake');void a.offsetWidth;a.classList.add('shake');}
+        function combo(){
+            document.querySelectorAll('.combo').forEach(c=>c.remove());
+            const r=(typeof appState!=='undefined')?appState.racha:0;
+            if(r>=2){const c=document.createElement('div');c.className='combo';c.textContent='🔥 COMBO x'+r+(r>=3?' · PUNTOS x1.5':'');
+                document.body.appendChild(c);setTimeout(()=>c.remove(),2200);}
+        }
+        // Enganchar a los sonidos existentes: todos los módulos los usan
+        const ac=sonido.acierto.bind(sonido),er=sonido.error.bind(sonido),fa=sonido.fanfarria.bind(sonido);
+        sonido.acierto=function(){ac();onoma(rnd(BIEN),false);flash('rgba(0,230,118,.5)');confeti(26);setTimeout(combo,60);};
+        sonido.error=function(){er();onoma(rnd(MAL),true);flash('rgba(255,46,85,.5)');temblor();document.querySelectorAll('.combo').forEach(c=>c.remove());};
+        sonido.fanfarria=function(){fa();onoma('¡MISIÓN CUMPLIDA!',false);confeti(90);};
+        // Transición de viñeta al cambiar de pantalla
+        const cp=cambiarPantalla;
+        cambiarPantalla=function(id){
+            const w=document.createElement('div');w.className='wipe';document.body.appendChild(w);setTimeout(()=>w.remove(),520);
+            document.querySelectorAll('.combo').forEach(c=>c.remove());
+            cp(id);
+        };
+        // Barra de tiempo en alerta cuando queda poco
+        setInterval(()=>{const b=document.getElementById('timer-bar');if(!b)return;
+            const t=(typeof appState!=='undefined')?appState.tiempoRestante:99;
+            b.classList.toggle('urgente',t>0&&t<=5);},500);
+        // Primera pantalla: entrada con onomatopeya
+        setTimeout(()=>onoma('¡A LA ACCIÓN!',false,50,30),500);
+    })();
+
+    // ===== ILUSTRACIONES CÓMIC POR PREGUNTA =====
+    (function(){
+        const E=(c,x,y,s)=>`<text class="mov" x="${x}" y="${y}" font-size="${s}" text-anchor="middle">${c}</text>`;
+        const T=(t,x,y,s,f='#fff')=>`<text x="${x}" y="${y}" font-family="Bangers,cursive" font-size="${s}" text-anchor="middle" fill="${f}" stroke="#000" stroke-width="4" paint-order="stroke">${t}</text>`;
+        const K='stroke="#000" stroke-width="5" stroke-linejoin="round"';
+        let rayos='';for(let i=0;i<14;i++){const a=i*Math.PI/7;rayos+=`<line x1="200" y1="90" x2="${200+Math.cos(a)*420}" y2="${90+Math.sin(a)*420}"/>`;}
+        function marco(c1,c2,body,cap){
+            const w=cap.length*12+26;
+            return `<svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${cap}">
+<defs><linearGradient id="gf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+<pattern id="ht" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.6" fill="#000" opacity=".22"/></pattern></defs>
+<rect width="400" height="220" fill="url(#gf)"/><g stroke="#fff" stroke-width="7" opacity=".13">${rayos}</g><rect width="400" height="220" fill="url(#ht)"/>
+${body}<g transform="translate(12 176) rotate(-2)"><rect width="${w}" height="34" fill="#FFD600" ${K}/><text x="12" y="26" font-family="Bangers,cursive" font-size="22" fill="#000">${cap}</text></g></svg>`;
+        }
+        let celdas='';for(let r=0;r<4;r++)for(let c=0;c<4;c++)celdas+=`<rect x="${70+c*62}" y="${14+r*38}" width="58" height="34" fill="${r==3&&c==2?'#FF6B00':'#e3f2fd'}" ${K.replace('5','3')}/>`;
+        let parc='';const pc=['#66bb6a','#ffd54f','#90a4ae','#66bb6a','#ffd54f','#ef5350','#66bb6a','#90a4ae'];
+        for(let i=0;i<8;i++)parc+=`<rect x="${50+(i%4)*76}" y="${18+Math.floor(i/4)*72}" width="70" height="66" fill="${pc[i]}" ${K.replace('5','3')}/>`;
+        const D={
+        nfpa:['#1a237e','#0d47a1',`<g ${K}><polygon points="200,10 270,80 200,150 130,80" fill="#fff"/><polygon points="200,10 235,45 200,80 165,45" fill="#e53935"/><polygon points="165,45 200,80 165,115 130,80" fill="#1e88e5"/><polygon points="235,45 270,80 235,115 200,80" fill="#fdd835"/></g>${T('?',200,56,24)}${T('?',165,90,24)}${T('?',235,90,24)}${T('?',200,124,24,'#000')}${E('🧪',70,100,56)}${E('☣️',335,100,56)}`,'ROMBO NFPA 704'],
+        cabillas:['#4e342e','#212121',`<rect x="140" y="8" width="120" height="160" fill="#9e9e9e" ${K}/><polygon points="140,100 180,90 200,130 170,168 140,168" fill="#616161"/><path d="M165 60 Q140 110 170 168" fill="none" stroke="#e65100" stroke-width="8"/><path d="M200 70 Q175 118 205 168" fill="none" stroke="#e65100" stroke-width="8"/><path d="M235 60 L235 168" fill="none" stroke="#e65100" stroke-width="8"/>${E('💥',275,70,56)}${E('⚠️',90,80,50)}`,'NODO DAÑADO'],
+        corte:['#37474f','#263238',`<rect x="30" y="60" width="340" height="62" fill="#bdbdbd" ${K}/><rect x="30" y="122" width="34" height="46" fill="#757575" ${K}/><rect x="336" y="122" width="34" height="46" fill="#757575" ${K}/><g stroke="#e53935" stroke-width="5" fill="none" stroke-linecap="round"><path d="M70 118 L112 66 L120 76"/><path d="M92 118 L134 66"/><path d="M330 118 L288 66 L280 76"/><path d="M308 118 L266 66"/></g>${T('45°',200,44,34,'#ffd600')}${E('🔍',200,112,44)}`,'VIGA BAJO LA LUPA'],
+        fisura:['#455a64','#263238',`<rect x="30" y="14" width="340" height="150" fill="#cfd8dc" ${K}/><path d="M60 60 L110 74 L150 62 L190 78" fill="none" stroke="#333" stroke-width="2.5"/><path d="M270 22 L292 70 L272 104 L304 160" fill="none" stroke="#000" stroke-width="9" stroke-linejoin="round"/>${E('🔍',130,128,52)}${T('¿FISURA?',110,40,20,'#ffd600')}${T('¿GRIETA?',320,50,20,'#ff8a65')}`,'FISURA VS GRIETA'],
+        columnas:['#0277bd','#01579b',`<rect x="40" y="30" width="320" height="26" fill="#90a4ae" ${K}/><rect x="40" y="100" width="320" height="18" fill="#90a4ae" ${K}/><rect x="70" y="56" width="30" height="44" fill="#cfd8dc" ${K}/><g fill="#FF6B00" ${K}><rect x="70" y="118" width="30" height="40"/><rect x="185" y="56" width="30" height="102"/><rect x="300" y="56" width="30" height="102"/></g><rect x="20" y="158" width="360" height="14" fill="#5d4037" ${K}/>${E('🏗️',300,36,40)}`,'EL ESQUELETO'],
+        incerfa:['#006064','#004d40',`${E('✈️',150,100,100)}${E('⏰',290,85,80)}${T('?',215,70,50,'#ffd600')}${E('📻',290,150,44)}`,'AVIONETA SIN REPORTE'],
+        destrefa:['#bf360c','#4e342e',`${E('🛩️',120,100,90)}${E('🔥',230,110,80)}${E('🆘',320,90,64)}${E('🚁',320,150,40)}`,'FASE DE EMERGENCIA'],
+        lopcymat:['#f57f17','#e65100',`${E('⛑️',130,110,100)}${E('⚠️',265,100,90)}${T('¿?',335,60,42,'#ffd600')}`,'INCIDENTE O ACCIDENTE'],
+        info:['#6a1b9a','#4a148c',`${E('📢',110,100,90)}${E('↔️',200,95,50)}${E('💬',290,100,90)}${T('DATOS',110,150,22)}${T('DIÁLOGO',290,150,22)}`,'INFORMAR VS COMUNICAR'],
+        medios:['#ad1457','#880e4f',`${E('🎙️',110,105,90)}${E('📺',250,100,90)}${E('📰',340,145,44)}${T('EN VIVO',250,36,26,'#ff5252')}`,'VOCERÍA OFICIAL'],
+        gestion:['#2e7d32','#1b5e20',`${E('🛡️',140,105,100)}${E('🏘️',270,110,90)}${E('🌱',330,150,40)}`,'GESTIÓN DE RIESGOS'],
+        mde:['#33691e','#1b5e20',`<g ${K}><ellipse cx="170" cy="90" rx="150" ry="76" fill="#aed581"/><ellipse cx="170" cy="90" rx="110" ry="54" fill="#9ccc65"/><ellipse cx="170" cy="86" rx="70" ry="34" fill="#7cb342"/><ellipse cx="170" cy="84" rx="30" ry="14" fill="#558b2f"/></g><path d="M40 150 Q150 110 230 128 T380 60" fill="none" stroke="#29b6f6" stroke-width="9" stroke-linecap="round"/>${E('🏠',330,108,36)}${E('🌧️',320,40,50)}`,'RELIEVE Y CRECIDAS'],
+        nir:['#1565c0','#0d47a1',`${E('🛰️',120,90,90)}<path d="M150 110 L250 150" stroke="#fff" stroke-width="4" stroke-dasharray="8 8"/>${E('🌿',290,150,80)}${E('🔴',335,60,36)}`,'LA VEGETACIÓN BRILLA'],
+        radar:['#00838f','#006064',`<rect x="0" y="126" width="400" height="50" fill="#29b6f6" ${K}/><rect x="188" y="46" width="14" height="84" fill="#455a64" ${K}/><ellipse cx="195" cy="44" rx="30" ry="12" fill="#eceff1" ${K}/><g fill="none" stroke="#ffd600" stroke-width="5" stroke-linecap="round"><path d="M235 40 q22 -14 44 0"/><path d="M245 24 q28 -20 56 0"/></g><circle cx="90" cy="156" r="16" fill="#ff6b00" ${K}/>${E('⬇️',90,128,30)}`,'SENSORES DEL RÍO'],
+        cospas:['#283593','#1a237e',`${E('🛰️',200,80,90)}<path d="M200 110 L110 160 M200 110 L300 160" stroke="#fff" stroke-width="4" stroke-dasharray="8 8"/>${E('📡',90,168,50)}${E('🆘',310,160,50)}`,'SEÑAL DE SOCORRO'],
+        heli:['#546e7a','#37474f',`${E('🚁',150,100,100)}${E('⚡',275,90,80)}${E('👷',320,150,50)}`,'ELECTRICIDAD ESTÁTICA'],
+        redes:['#0288d1','#01579b',`${E('📱',140,105,100)}${E('❤️',250,60,40)}${E('🔁',300,100,44)}${E('✅',250,150,44)}${E('🗣️',335,150,40)}`,'SALA SITUACIONAL EN REDES'],
+        marco:['#3949ab','#283593',`${celdas}${T('SUPUESTOS',230,158,20,'#ffd600')}`,'MARCO LÓGICO'],
+        tsunami:['#01579b','#002f6c',`${E('🌊',150,115,110)}${E('📱',290,95,80)}${T('¿?',335,50,44,'#ffd600')}${E('🚫',290,150,40)}`,'RUMOR EN REDES'],
+        suelo:['#558b2f','#33691e',`${parc}${E('📐',335,160,44)}${T('RIESGO',278,120,16,'#fff')}`,'PLANIFICAR EL TERRITORIO'],
+        lluvia:['#37474f','#1c313a',`<path d="M0 110 L110 40 L220 100 L320 46 L400 96 L400 176 L0 176Z" fill="#43a047" ${K}/><rect x="0" y="144" width="400" height="32" fill="#29b6f6" ${K}/>${E('🌧️',120,70,80)}${E('⛈️',290,60,70)}${E('🏘️',200,148,50)}`,'CRECIDA EN LA CUENCA'],
+        cisterna:['#4a148c','#311b92',`<rect x="0" y="146" width="400" height="30" fill="#455a64" ${K}/>${E('🚛',150,140,100)}${E('☣️',275,110,70)}${E('🔥',335,140,50)}${E('🚧',60,150,40)}`,'DERRAME PELIGROSO'],
+        avion:['#00695c','#004d40',`${E('🏔️',300,130,100)}${E('✈️',130,90,90)}${E('⏰',60,150,50)}${E('❓',230,60,50)}`,'AERONAVE DESAPARECIDA'],
+        hospital:['#b71c1c','#7f0000',`${E('🏥',200,120,120)}<path d="M20 100 l20 -22 l20 44 l20 -44 l20 22" fill="none" stroke="#ffd600" stroke-width="6" stroke-linejoin="round"/><path d="M280 100 l20 -22 l20 44 l20 -44 l20 22" fill="none" stroke="#ffd600" stroke-width="6" stroke-linejoin="round"/>${E('⚠️',335,40,44)}`,'SISMO EN EL HOSPITAL'],
+        base:['#0d47a1','#082a5e',`${E('🚨',130,105,100)}${E('🧭',270,100,90)}`,'OPERACIONES PCAD']
+        };
+        const R=[[/Precipitaciones|cuenca/,'lluvia'],[/cisterna/,'cisterna'],[/Aeronave|Maiquetía/,'avion'],[/Sismo|hospital/,'hospital'],[/NFPA/,'nfpa'],[/cabillas/,'cabillas'],[/45°/,'corte'],[/Fisura/,'fisura'],[/columnas/,'columnas'],[/INCERFA/,'incerfa'],[/DESTREFA/,'destrefa'],[/LOPCYMAT/,'lopcymat'],
+            [/Informaci[oó]n.*Comunicaci/,'info'],[/medios de comunicaci/,'medios'],[/enfoque contemporáneo/,'gestion'],[/Elevaciones/,'mde'],[/Infrarrojo/,'nir'],[/RADAR/,'radar'],
+            [/COSPAS/,'cospas'],[/helic[oó]ptero/,'heli'],[/tsunami/,'tsunami'],[/redes sociales/,'redes'],[/Marco L[oó]gico/,'marco'],[/uso del suelo/,'suelo'],
+            [/Precipitaciones|cuenca/,'lluvia'],[/cisterna/,'cisterna'],[/Aeronave|Maiquetía/,'avion'],[/Sismo|hospital/,'hospital']];
+        function poner(id,txt){
+            const el=document.getElementById(id);if(!el)return;
+            const k=(R.find(r=>r[0].test(txt))||[0,'base'])[1],d=D[k];
+            el.innerHTML=marco(d[0],d[1],d[2],d[3]);
+            el.classList.remove('nueva');void el.offsetWidth;el.classList.add('nueva');window.scrollTo(0,0);
+        }
+        const cp1=cargarPregunta;cargarPregunta=function(){cp1();poner('ilus-juego',appState.banco[appState.indice].pregunta);};
+        const cp2=cargarEscenarioDespacho;cargarEscenarioDespacho=function(){cp2();const e=ESCENARIOS_DESPACHO[appState.indiceDespacho];poner('ilus-despacho',e.radio);};
+    })();
+</script>
+</body>
+</html>
