@@ -1,0 +1,11 @@
+{
+  "name": "pcad-operaciones-unes",
+  "version": "1.0.0",
+  "description": "Simulador Táctico de Operaciones PCAD - UNES",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["pcad", "unes", "simulador", "proteccion-civil"],
+  "author": "PCAD UNES",
+  "license": "MIT"
+}
